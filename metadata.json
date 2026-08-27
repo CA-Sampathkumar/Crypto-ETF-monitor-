@@ -1,0 +1,8 @@
+{
+  "name": "Remix Crypto ETF Tracker & Filings Dashboard",
+  "description": "Real-time tracker for crypto token ETF applications, institutional holdings, official SEC EDGAR filings, applicant issuers, and statutory deadline schedules.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
