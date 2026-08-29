@@ -124,6 +124,10 @@ class NotificationAudioService {
     }
   }
 
+  public playActivityChime(): void {
+    this.playChime("NEWS");
+  }
+
   public async requestBrowserNotificationPermission(): Promise<boolean> {
     if (typeof window === "undefined" || !("Notification" in window)) {
       return false;

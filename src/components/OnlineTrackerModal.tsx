@@ -137,7 +137,7 @@ export function OnlineTrackerModal({
                 </span>
               </div>
               <p className="text-xs text-[#888888]">
-                Continuous full-text search across SEC EDGAR EFTS (19b-4 &amp; S-1 pagination), Bloomberg, CoinGecko &amp; Binance
+                Continuous full-text search across SEC EDGAR EFTS (19b-4 &amp; S-1 pagination), Bloomberg, CoinGecko &amp; Spot Market Feeds
               </p>
             </div>
           </div>

@@ -295,6 +295,7 @@ app.get("/api/market/live-prices", async (_req: Request, res: Response) => {
       ETH: { id: "ethereum", binanceSymbol: "ETHUSDT", circulatingSupply: 120200000 },
       SOL: { id: "solana", binanceSymbol: "SOLUSDT", circulatingSupply: 472000000 },
       XRP: { id: "ripple", binanceSymbol: "XRPUSDT", circulatingSupply: 56900000000 },
+      BNB: { id: "binancecoin", binanceSymbol: "BNBUSDT", circulatingSupply: 144500000 },
       LTC: { id: "litecoin", binanceSymbol: "LTCUSDT", circulatingSupply: 75200000 },
       DOGE: { id: "dogecoin", binanceSymbol: "DOGEUSDT", circulatingSupply: 148000000000 },
       ADA: { id: "cardano", binanceSymbol: "ADAUSDT", circulatingSupply: 35700000000 },
@@ -322,10 +323,66 @@ app.get("/api/market/live-prices", async (_req: Request, res: Response) => {
       UNI: { id: "uniswap", binanceSymbol: "UNIUSDT", circulatingSupply: 600000000 },
       AAVE: { id: "aave", binanceSymbol: "AAVEUSDT", circulatingSupply: 15000000 },
       FIL: { id: "filecoin", binanceSymbol: "FILUSDT", circulatingSupply: 610000000 },
+      ARB: { id: "arbitrum", binanceSymbol: "ARBUSDT", circulatingSupply: 4100000000 },
+      OP: { id: "optimism", binanceSymbol: "OPUSDT", circulatingSupply: 1250000000 },
+      PEPE: { id: "pepe", binanceSymbol: "PEPEUSDT", circulatingSupply: 420690000000000 },
+      SHIB: { id: "shiba-inu", binanceSymbol: "SHIBUSDT", circulatingSupply: 589000000000000 },
       MANA: { id: "decentraland", binanceSymbol: "MANAUSDT", circulatingSupply: 1860000000 },
       BAT: { id: "basic-attention-token", binanceSymbol: "BATUSDT", circulatingSupply: 1490000000 },
       LPT: { id: "livepeer", binanceSymbol: "LPTUSDT", circulatingSupply: 36000000 },
       MKR: { id: "maker", binanceSymbol: "MKRUSDT", circulatingSupply: 920000 },
+      FLOKI: { id: "floki", binanceSymbol: "FLOKIUSDT", circulatingSupply: 9680000000000 },
+      BONK: { id: "bonk", binanceSymbol: "BONKUSDT", circulatingSupply: 75000000000000 },
+      WIF: { id: "dogwifcoin", binanceSymbol: "WIFUSDT", circulatingSupply: 998900000 },
+      CRV: { id: "curve-dao-token", binanceSymbol: "CRVUSDT", circulatingSupply: 1250000000 },
+      SNX: { id: "havven", binanceSymbol: "SNXUSDT", circulatingSupply: 327000000 },
+      COMP: { id: "compound-governance-token", binanceSymbol: "COMPUSDT", circulatingSupply: 8850000 },
+      JUP: { id: "jupiter-exchange-solana", binanceSymbol: "JUPUSDT", circulatingSupply: 1350000000 },
+      PYTH: { id: "pyth-network", binanceSymbol: "PYTHUSDT", circulatingSupply: 3625000000 },
+      ENA: { id: "ethena", binanceSymbol: "ENAUSDT", circulatingSupply: 2840000000 },
+      PENDLE: { id: "pendle", binanceSymbol: "PENDLEUSDT", circulatingSupply: 163000000 },
+      MNT: { id: "mantle", binanceSymbol: "MNTUSDT", circulatingSupply: 3370000000 },
+      KAVA: { id: "kava", binanceSymbol: "KAVAUSDT", circulatingSupply: 1080000000 },
+      ALGO: { id: "algorand", binanceSymbol: "ALGOUSDT", circulatingSupply: 8310000000 },
+      QNT: { id: "quant-network", binanceSymbol: "QNTUSDT", circulatingSupply: 14500000 },
+      FTM: { id: "fantom", binanceSymbol: "FTMUSDT", circulatingSupply: 2800000000 },
+      DYDX: { id: "dydx-chain", binanceSymbol: "DYDXUSDT", circulatingSupply: 670000000 },
+      STRK: { id: "starknet", binanceSymbol: "STRKUSDT", circulatingSupply: 2100000000 },
+      ZK: { id: "zksync", binanceSymbol: "ZKUSDT", circulatingSupply: 3675000000 },
+      WLD: { id: "worldcoin-wld", binanceSymbol: "WLDUSDT", circulatingSupply: 710000000 },
+      XAUT: { id: "tether-gold", binanceSymbol: "PAXGUSDT", circulatingSupply: 246524 },
+      PAXG: { id: "pax-gold", binanceSymbol: "PAXGUSDT", circulatingSupply: 185000 },
+      THETA: { id: "theta-token", binanceSymbol: "THETAUSDT", circulatingSupply: 1000000000 },
+      JASMY: { id: "jasmycoin", binanceSymbol: "JASMYUSDT", circulatingSupply: 49300000000 },
+      RAY: { id: "raydium", binanceSymbol: "RAYUSDT", circulatingSupply: 290000000 },
+      AERO: { id: "aerodrome-finance", binanceSymbol: "AEROUSDT", circulatingSupply: 720000000 },
+      AKT: { id: "akash-network", binanceSymbol: "AKTUSDT", circulatingSupply: 250000000 },
+      ENS: { id: "ethereum-name-service", binanceSymbol: "ENSUSDT", circulatingSupply: 33500000 },
+      EIGEN: { id: "eigenlayer", binanceSymbol: "EIGENUSDT", circulatingSupply: 195000000 },
+      AR: { id: "arweave", binanceSymbol: "ARUSDT", circulatingSupply: 65600000 },
+      XMR: { id: "monero", binanceSymbol: "XMRUSDT", circulatingSupply: 18450000 },
+      POPCAT: { id: "popcat", binanceSymbol: "POPCATUSDT", circulatingSupply: 979900000 },
+      NEIRO: { id: "neiro-on-eth", binanceSymbol: "NEIROUSDT", circulatingSupply: 420690000000 },
+      CFX: { id: "conflux-token", binanceSymbol: "CFXUSDT", circulatingSupply: 4680000000 },
+      GRASS: { id: "grass", binanceSymbol: "GRASSUSDT", circulatingSupply: 244000000 },
+      BLUR: { id: "blur", binanceSymbol: "BLURUSDT", circulatingSupply: 1820000000 },
+      "1INCH": { id: "1inch", binanceSymbol: "1INCHUSDT", circulatingSupply: 1280000000 },
+      CAKE: { id: "pancakeswap-token", binanceSymbol: "CAKEUSDT", circulatingSupply: 285000000 },
+      MINA: { id: "mina-protocol", binanceSymbol: "MINAUSDT", circulatingSupply: 1180000000 },
+      DASH: { id: "dash", binanceSymbol: "DASHUSDT", circulatingSupply: 12100000 },
+      RON: { id: "ronin", binanceSymbol: "RONINUSDT", circulatingSupply: 370000000 },
+      APE: { id: "apecoin", binanceSymbol: "APEUSDT", circulatingSupply: 721000000 },
+      W: { id: "wormhole", binanceSymbol: "WUSDT", circulatingSupply: 2750000000 },
+      ME: { id: "magic-eden", binanceSymbol: "MEUSDT", circulatingSupply: 125000000 },
+      TWT: { id: "trust-wallet-token", binanceSymbol: "TWTUSDT", circulatingSupply: 416000000 },
+      EGLD: { id: "elrond-erd-2", binanceSymbol: "EGLDUSDT", circulatingSupply: 27500000 },
+      IOTA: { id: "iota", binanceSymbol: "IOTAUSDT", circulatingSupply: 3500000000 },
+      ROSE: { id: "oasis-network", binanceSymbol: "ROSEUSDT", circulatingSupply: 6720000000 },
+      MOG: { id: "mog-coin", binanceSymbol: "MOGUSDT", circulatingSupply: 390000000000000 },
+      BOME: { id: "book-of-meme", binanceSymbol: "BOMEUSDT", circulatingSupply: 69000000000 },
+      MEW: { id: "cat-in-a-dogs-world", binanceSymbol: "MEWUSDT", circulatingSupply: 88888888888 },
+      MORPHO: { id: "morpho", binanceSymbol: "MORPHOUSDT", circulatingSupply: 120000000 },
+      VIRTUAL: { id: "virtual-protocol", binanceSymbol: "VIRTUALUSDT", circulatingSupply: 1000000000 },
     };
 
     const symbols = Object.keys(tokenMetadata);
@@ -449,6 +506,131 @@ app.get("/api/market/live-prices", async (_req: Request, res: Response) => {
     });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Live Kline / Candlestick API Proxy (Free, No API Keys required, Live data only)
+app.get("/api/market/klines", async (req: Request, res: Response) => {
+  try {
+    const rawSymbol = ((req.query.symbol as string) || "BTCUSDT").toUpperCase();
+    const rawInterval = ((req.query.interval as string) || "15m").trim();
+    let limit = Math.min(parseInt((req.query.limit as string) || "100", 10), 1000);
+
+    // Map interval: '1M', '1y', '5y', 'max', 'all'
+    let interval = rawInterval.toLowerCase();
+    if (rawInterval === "1M" || interval === "1month" || interval === "month") {
+      interval = "1M";
+      limit = Math.max(limit, 60);
+    } else if (rawInterval === "1y" || interval === "1year" || interval === "year") {
+      interval = "1d";
+      limit = Math.max(limit, 365);
+    } else if (rawInterval === "5y" || interval === "5year" || interval === "5years") {
+      interval = "1w";
+      limit = Math.max(limit, 260);
+    } else if (rawInterval === "max" || interval === "max" || interval === "all") {
+      interval = "1M";
+      limit = Math.max(limit, 500);
+    }
+
+    const tokenMetaMap: Record<string, { binanceSymbol: string }> = {
+      BTC: { binanceSymbol: "BTCUSDT" },
+      ETH: { binanceSymbol: "ETHUSDT" },
+      SOL: { binanceSymbol: "SOLUSDT" },
+      XRP: { binanceSymbol: "XRPUSDT" },
+      BNB: { binanceSymbol: "BNBUSDT" },
+      LTC: { binanceSymbol: "LTCUSDT" },
+      DOGE: { binanceSymbol: "DOGEUSDT" },
+      ADA: { binanceSymbol: "ADAUSDT" },
+      SUI: { binanceSymbol: "SUIUSDT" },
+      APT: { binanceSymbol: "APTUSDT" },
+      HYPE: { binanceSymbol: "HYPEUSDT" },
+      XLM: { binanceSymbol: "XLMUSDT" },
+      LINK: { binanceSymbol: "LINKUSDT" },
+      AVAX: { binanceSymbol: "AVAXUSDT" },
+      NEAR: { binanceSymbol: "NEARUSDT" },
+      HBAR: { binanceSymbol: "HBARUSDT" },
+      TAO: { binanceSymbol: "TAOUSDT" },
+      ONDO: { binanceSymbol: "ONDOUSDT" },
+      INJ: { binanceSymbol: "INJUSDT" },
+      TIA: { binanceSymbol: "TIAUSDT" },
+      SEI: { binanceSymbol: "SEIUSDT" },
+      RENDER: { binanceSymbol: "RENDERUSDT" },
+      FET: { binanceSymbol: "FETUSDT" },
+      KAS: { binanceSymbol: "KASUSDT" },
+      DOT: { binanceSymbol: "DOTUSDT" },
+      BCH: { binanceSymbol: "BCHUSDT" },
+      UNI: { binanceSymbol: "UNIUSDT" },
+      AAVE: { binanceSymbol: "AAVEUSDT" },
+      FIL: { binanceSymbol: "FILUSDT" },
+      ARB: { binanceSymbol: "ARBUSDT" },
+      OP: { binanceSymbol: "OPUSDT" },
+      PEPE: { binanceSymbol: "PEPEUSDT" },
+      SHIB: { binanceSymbol: "SHIBUSDT" },
+      WLD: { binanceSymbol: "WLDUSDT" },
+      XAUT: { binanceSymbol: "PAXGUSDT" },
+      PAXG: { binanceSymbol: "PAXGUSDT" },
+    };
+
+    let binanceSymbol = rawSymbol;
+    if (tokenMetaMap[rawSymbol]) {
+      binanceSymbol = tokenMetaMap[rawSymbol].binanceSymbol;
+    } else if (!binanceSymbol.endsWith("USDT") && !binanceSymbol.endsWith("BTC") && !binanceSymbol.endsWith("FDUSD")) {
+      binanceSymbol = `${binanceSymbol}USDT`;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+
+    const bRes = await fetch(
+      `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&limit=${limit}`,
+      { signal: controller.signal }
+    ).catch(() => null);
+
+    clearTimeout(timeout);
+
+    if (bRes && bRes.ok) {
+      const rawKlines: any[] = await bRes.json();
+      const candles = rawKlines.map((item) => {
+        const openTime = item[0];
+        const open = parseFloat(item[1]) || 0;
+        const high = parseFloat(item[2]) || 0;
+        const low = parseFloat(item[3]) || 0;
+        const close = parseFloat(item[4]) || 0;
+        const volume = parseFloat(item[5]) || 0;
+        const closeTime = item[6];
+        const quoteVolume = parseFloat(item[7]) || 0;
+        const trades = parseInt(item[8]) || 0;
+
+        return {
+          time: openTime,
+          closeTime,
+          open,
+          high,
+          low,
+          close,
+          volume,
+          quoteVolume,
+          trades,
+        };
+      });
+
+      return res.json({
+        success: true,
+        symbol: binanceSymbol,
+        interval,
+        count: candles.length,
+        candles,
+        source: "Public Spot Klines (Live Market Feed)",
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    return res.status(502).json({
+      success: false,
+      error: `Unable to fetch live klines for ${binanceSymbol} at interval ${interval} from public endpoint`,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 

@@ -1,6 +1,8 @@
 // Real-time market pricing service powered 100% by FREE, PUBLIC, OPEN APIs (Binance Public Spot + CoinGecko Free Tier)
 // ZERO API keys required, zero paid subscriptions. ZERO hardcoded defaults.
 
+import { MONITORED_TOKENS } from "../data/tokenMonitorData";
+
 export interface LiveTokenPrice {
   symbol: string;
   priceUsd: number;
@@ -14,47 +16,28 @@ export interface LiveTokenPrice {
   source?: string;
 }
 
-// Token metadata: mapping symbol to CoinGecko ID, Binance USDT ticker, and verified circulating blockchain supply
-export const TOKEN_METADATA_MAP: Record<
+// Build token metadata from MONITORED_TOKENS catalog with custom overrides
+const baseMetaMap: Record<
   string,
   { id: string; binanceSymbol?: string; circulatingSupply: number }
 > = {
-  BTC: { id: "bitcoin", binanceSymbol: "BTCUSDT", circulatingSupply: 19825000 },
-  ETH: { id: "ethereum", binanceSymbol: "ETHUSDT", circulatingSupply: 120200000 },
-  SOL: { id: "solana", binanceSymbol: "SOLUSDT", circulatingSupply: 472000000 },
-  XRP: { id: "ripple", binanceSymbol: "XRPUSDT", circulatingSupply: 56900000000 },
-  LTC: { id: "litecoin", binanceSymbol: "LTCUSDT", circulatingSupply: 75200000 },
-  DOGE: { id: "dogecoin", binanceSymbol: "DOGEUSDT", circulatingSupply: 148000000000 },
-  ADA: { id: "cardano", binanceSymbol: "ADAUSDT", circulatingSupply: 35700000000 },
-  SUI: { id: "sui", binanceSymbol: "SUIUSDT", circulatingSupply: 3450000000 },
-  APT: { id: "aptos", binanceSymbol: "APTUSDT", circulatingSupply: 405000000 },
-  HYPE: { id: "hyperliquid", binanceSymbol: "HYPEUSDT", circulatingSupply: 333000000 },
-  XLM: { id: "stellar", binanceSymbol: "XLMUSDT", circulatingSupply: 29800000000 },
-  LINK: { id: "chainlink", binanceSymbol: "LINKUSDT", circulatingSupply: 626849000 },
-  AVAX: { id: "avalanche-2", binanceSymbol: "AVAXUSDT", circulatingSupply: 406000000 },
-  NEAR: { id: "near", binanceSymbol: "NEARUSDT", circulatingSupply: 1220000000 },
-  HBAR: { id: "hedera-hashgraph", binanceSymbol: "HBARUSDT", circulatingSupply: 38200000000 },
-  TAO: { id: "bittensor", binanceSymbol: "TAOUSDT", circulatingSupply: 7380000 },
-  ONDO: { id: "ondo-finance", binanceSymbol: "ONDOUSDT", circulatingSupply: 1420000000 },
-  INJ: { id: "injective-protocol", binanceSymbol: "INJUSDT", circulatingSupply: 100000000 },
-  TIA: { id: "celestia", binanceSymbol: "TIAUSDT", circulatingSupply: 220000000 },
-  SEI: { id: "sei-network", binanceSymbol: "SEIUSDT", circulatingSupply: 3250000000 },
-  RENDER: { id: "render-token", binanceSymbol: "RENDERUSDT", circulatingSupply: 518000000 },
-  FET: { id: "fetch-ai", binanceSymbol: "FETUSDT", circulatingSupply: 2600000000 },
-  KAS: { id: "kaspa", binanceSymbol: "KASUSDT", circulatingSupply: 25200000000 },
-  STX: { id: "blockstack", binanceSymbol: "STXUSDT", circulatingSupply: 1500000000 },
-  DOT: { id: "polkadot", binanceSymbol: "DOTUSDT", circulatingSupply: 1460000000 },
-  ETC: { id: "ethereum-classic", binanceSymbol: "ETCUSDT", circulatingSupply: 149000000 },
-  BCH: { id: "bitcoin-cash", binanceSymbol: "BCHUSDT", circulatingSupply: 19800000 },
-  ZEC: { id: "zcash", binanceSymbol: "ZECUSDT", circulatingSupply: 16328000 },
-  UNI: { id: "uniswap", binanceSymbol: "UNIUSDT", circulatingSupply: 600000000 },
-  AAVE: { id: "aave", binanceSymbol: "AAVEUSDT", circulatingSupply: 15000000 },
-  FIL: { id: "filecoin", binanceSymbol: "FILUSDT", circulatingSupply: 610000000 },
-  MANA: { id: "decentraland", binanceSymbol: "MANAUSDT", circulatingSupply: 1860000000 },
-  BAT: { id: "basic-attention-token", binanceSymbol: "BATUSDT", circulatingSupply: 1490000000 },
-  LPT: { id: "livepeer", binanceSymbol: "LPTUSDT", circulatingSupply: 36000000 },
-  MKR: { id: "maker", binanceSymbol: "MKRUSDT", circulatingSupply: 920000 },
+  INDEX: { id: "crypto-index", binanceSymbol: "BTCUSDT", circulatingSupply: 1000000000 },
+  XAUT: { id: "tether-gold", binanceSymbol: "PAXGUSDT", circulatingSupply: 246524 },
+  PAXG: { id: "pax-gold", binanceSymbol: "PAXGUSDT", circulatingSupply: 185000 },
 };
+
+// Populate with all 200 tokens from MONITORED_TOKENS
+MONITORED_TOKENS.forEach((t) => {
+  if (!baseMetaMap[t.symbol]) {
+    baseMetaMap[t.symbol] = {
+      id: t.coingeckoId || t.symbol.toLowerCase(),
+      binanceSymbol: t.binanceSymbol || `${t.symbol}USDT`,
+      circulatingSupply: t.circulatingSupply || 1000000000,
+    };
+  }
+});
+
+export const TOKEN_METADATA_MAP = baseMetaMap;
 
 // Backward compatibility export
 export const TOKEN_ID_MAP = TOKEN_METADATA_MAP;
@@ -225,3 +208,114 @@ export async function fetchLiveCryptoPrices(): Promise<Record<string, LiveTokenP
 
   return result;
 }
+
+export interface CandleData {
+  time: number; // ms timestamp
+  closeTime?: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  quoteVolume?: number;
+  trades?: number;
+}
+
+export type KlineTimeframe = "15m" | "1h" | "4h" | "1d" | "1w" | "1M" | "1y" | "5y" | "max";
+
+/**
+ * Fetches real, live candlestick Kline data using 100% Free Public Market APIs (Direct / Server Proxy)
+ * Zero simulated candles - 100% verified live historical & streaming candles.
+ */
+export async function fetchLiveKlines(
+  symbol: string,
+  timeframe: KlineTimeframe = "15m",
+  limit = 120
+): Promise<CandleData[]> {
+  const normSym = symbol.toUpperCase();
+  const meta = TOKEN_METADATA_MAP[normSym];
+  let binanceSymbol = meta?.binanceSymbol || (normSym.endsWith("USDT") ? normSym : `${normSym}USDT`);
+
+  // Map timeframe to public spot interval string
+  let interval = "15m";
+  let fetchLimit = limit;
+
+  if (timeframe === "15m") interval = "15m";
+  else if (timeframe === "1h") interval = "1h";
+  else if (timeframe === "4h") interval = "4h";
+  else if (timeframe === "1d") interval = "1d";
+  else if (timeframe === "1w") interval = "1w";
+  else if (timeframe === "1M") {
+    interval = "1M";
+    fetchLimit = Math.max(60, limit);
+  } else if (timeframe === "1y") {
+    // 1 year perspective: 1d daily candles over 365 days or 1w candles
+    interval = "1d";
+    fetchLimit = 365;
+  } else if (timeframe === "5y") {
+    // 5 years perspective: 1w weekly candles over 260 weeks
+    interval = "1w";
+    fetchLimit = 260;
+  } else if (timeframe === "max") {
+    // MAX perspective: 1M monthly candles spanning all available history (up to 500 months)
+    interval = "1M";
+    fetchLimit = 500;
+  }
+
+  // 1. Try direct public endpoint first
+  try {
+    const directController = new AbortController();
+    const directTimeout = setTimeout(() => directController.abort(), 4000);
+
+    const directRes = await fetch(
+      `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&limit=${fetchLimit}`,
+      { signal: directController.signal }
+    ).catch(() => null);
+
+    clearTimeout(directTimeout);
+
+    if (directRes && directRes.ok) {
+      const rawKlines: any[] = await directRes.json();
+      if (Array.isArray(rawKlines) && rawKlines.length > 0) {
+        return rawKlines.map((item) => ({
+          time: item[0],
+          closeTime: item[6],
+          open: parseFloat(item[1]) || 0,
+          high: parseFloat(item[2]) || 0,
+          low: parseFloat(item[3]) || 0,
+          close: parseFloat(item[4]) || 0,
+          volume: parseFloat(item[5]) || 0,
+          quoteVolume: parseFloat(item[7]) || 0,
+          trades: parseInt(item[8]) || 0,
+        }));
+      }
+    }
+  } catch (directErr) {
+    console.warn("Direct spot klines fetch failed, trying server proxy:", directErr);
+  }
+
+  // 2. Fallback to Server-side proxy (/api/market/klines)
+  try {
+    const serverController = new AbortController();
+    const serverTimeout = setTimeout(() => serverController.abort(), 5000);
+
+    const serverRes = await fetch(
+      `/api/market/klines?symbol=${binanceSymbol}&interval=${interval}&limit=${fetchLimit}`,
+      { signal: serverController.signal }
+    ).catch(() => null);
+
+    clearTimeout(serverTimeout);
+
+    if (serverRes && serverRes.ok) {
+      const serverData = await serverRes.json();
+      if (serverData.success && Array.isArray(serverData.candles)) {
+        return serverData.candles;
+      }
+    }
+  } catch (serverErr) {
+    console.warn("Server proxy klines fetch error:", serverErr);
+  }
+
+  return [];
+}
+

@@ -51,7 +51,7 @@ export const TokenCustodySupplyLockView: React.FC<TokenCustodySupplyLockViewProp
     "Gemini Trust",
   ];
 
-  // Live dynamic token custody and supply data synchronized with Binance prices
+  // Live dynamic token custody and supply data synchronized with real-time market prices
   const liveCustodyData = useMemo(() => {
     const priceMap = new Map<string, { priceUsd: number; change24h: number }>();
     applications.forEach((a) => {

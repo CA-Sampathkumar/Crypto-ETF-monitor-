@@ -215,8 +215,8 @@ export const NewsFeedView: React.FC<NewsFeedViewProps> = ({
             <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
             <span className="font-medium">{lastScanLog}</span>
           </div>
-          <span className="text-[11px] text-emerald-400/80 font-mono">
-            {applications.length} Total Filings in Database
+          <span className="text-[11px] text-emerald-400/80 font-mono hidden sm:inline">
+            Live Feed Active
           </span>
         </div>
       )}

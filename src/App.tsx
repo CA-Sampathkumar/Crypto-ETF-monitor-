@@ -11,14 +11,14 @@ import { NewsFeedView } from "./components/NewsFeedView";
 import { ApplicationProcessChartMap } from "./components/ApplicationProcessChartMap";
 import { TokenCustodySupplyLockView } from "./components/TokenCustodySupplyLockView";
 import { TokensMapStatusChartView } from "./components/TokensMapStatusChartView";
+import { TokensPriceMonitorView } from "./components/TokensPriceMonitorView";
 import { IssuerWalletsUntappedPipelineView } from "./components/IssuerWalletsUntappedPipelineView";
 import { EtfDetailModal } from "./components/EtfDetailModal";
 import { OnlineTrackerModal } from "./components/OnlineTrackerModal";
-import { ApkDownloadModal } from "./components/ApkDownloadModal";
 import { INITIAL_ETF_APPLICATIONS } from "./data/etfData";
 import { INITIAL_TODAY_ACTIVITIES, generateInitialNotifications } from "./data/dailyActivityData";
 import { notificationAudio } from "./services/notificationAudioService";
-import { fetchLiveCryptoPrices } from "./services/marketApi";
+import { fetchLiveCryptoPrices, LiveTokenPrice } from "./services/marketApi";
 import { syncNewsAndFilings } from "./services/newsSyncService";
 import { performOnlineTrackerScan } from "./services/onlineTrackerSyncService";
 import { fetchLiveSecEdgarActivities } from "./services/secLiveActivityService";
@@ -81,14 +81,14 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>("today");
   const [selectedEtf, setSelectedEtf] = useState<ETFApplication | null>(null);
   const [isOnlineTrackerModalOpen, setIsOnlineTrackerModalOpen] = useState(false);
-  const [isApkModalOpen, setIsApkModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isScanningNews, setIsScanningNews] = useState(false);
   const [isSyncingSec, setIsSyncingSec] = useState(false);
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
   const [refreshIntervalSeconds, setRefreshIntervalSeconds] = useState<number>(30);
   const [lastUpdatedTime, setLastUpdatedTime] = useState<string>("");
-  const [lastScanLog, setLastScanLog] = useState<string>("Online Tracker Engine: 60+ crypto ETFs synchronized across SEC EDGAR, CoinGecko & Binance");
+  const [livePrices, setLivePrices] = useState<Record<string, LiveTokenPrice>>({});
+  const [lastScanLog, setLastScanLog] = useState<string>("Online Tracker Engine: 60+ crypto ETFs synchronized across SEC EDGAR, CoinGecko & Spot Markets");
   const [newFilingsAlert, setNewFilingsAlert] = useState<{ count: number; tickers: string[] } | null>(null);
   const [syncLogs, setSyncLogs] = useState<OnlineSyncLog[]>([
     {
@@ -205,6 +205,9 @@ export default function App() {
       // Perform online tracker scan including SEC EDGAR EFTS backend filings and live price feeds
       const scanResult = await performOnlineTrackerScan(applications);
       setApplications(scanResult.updatedApplications);
+      if (scanResult.livePrices && Object.keys(scanResult.livePrices).length > 0) {
+        setLivePrices(scanResult.livePrices);
+      }
       setSyncLogs((prev) => [scanResult.log, ...prev.slice(0, 49)]);
 
       if (scanResult.newlyAddedCount > 0) {
@@ -240,9 +243,28 @@ export default function App() {
     }
   }, [applications]);
 
+  // Direct manual refresh for live crypto token prices from Binance & CoinGecko
+  const handleManualRefreshPrices = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const prices = await fetchLiveCryptoPrices();
+      if (prices && Object.keys(prices).length > 0) {
+        setLivePrices(prices);
+      }
+      setLastUpdatedTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    } catch (err) {
+      console.warn("Failed to refresh live prices directly:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
+
   // Initial load sync
   useEffect(() => {
     syncLivePricesAndNews();
+    fetchLiveCryptoPrices().then((p) => {
+      if (p && Object.keys(p).length > 0) setLivePrices(p);
+    }).catch((e) => console.warn("Initial direct price fetch note:", e));
   }, []);
 
   // Recurring 30s auto-refresh timer
@@ -284,6 +306,9 @@ export default function App() {
     try {
       const scanResult = await performOnlineTrackerScan(applications);
       setApplications(scanResult.updatedApplications);
+      if (scanResult.livePrices && Object.keys(scanResult.livePrices).length > 0) {
+        setLivePrices(scanResult.livePrices);
+      }
       setSyncLogs((prev) => [scanResult.log, ...prev.slice(0, 49)]);
       setLastUpdatedTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
 
@@ -294,7 +319,7 @@ export default function App() {
         });
         setLastScanLog(`✨ Online scanner discovered & added ${scanResult.newlyAddedCount} new verified crypto ETF(s): ${scanResult.newTickersAdded.join(", ")}`);
       } else {
-        setLastScanLog(`✅ All ${scanResult.updatedApplications.length} crypto ETFs synchronized with Binance & CoinGecko public feeds.`);
+        setLastScanLog(`✅ All ${scanResult.updatedApplications.length} crypto ETFs synchronized with live CoinGecko & Spot public feeds.`);
       }
     } catch (e) {
       console.warn("Online tracker scan error:", e);
@@ -416,7 +441,6 @@ export default function App() {
         onRefreshPrices={syncLivePricesAndNews}
         isRefreshing={isRefreshing}
         onOpenOnlineTrackerModal={() => setIsOnlineTrackerModalOpen(true)}
-        onOpenApkModal={() => setIsApkModalOpen(true)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onSelectEtf={handleSelectEtf}
@@ -476,9 +500,6 @@ export default function App() {
           </div>
         )}
 
-        {/* KPI Stat Cards */}
-        <KpiStats applications={applications} />
-
         {/* Today's Activity Dedicated Tab */}
         {activeTab === "today" && (
           <TodayActivityView
@@ -495,7 +516,10 @@ export default function App() {
 
         {/* View Switcher Container */}
         {activeTab === "filings" && (
-          <div>
+          <div className="space-y-6">
+            {/* Master Filing KPI Summary Stats - Exclusive to Filing Directory */}
+            <KpiStats applications={applications} />
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div>
                 <h2 className="text-lg font-bold text-white tracking-tight">
@@ -537,6 +561,20 @@ export default function App() {
           <TokenCustodySupplyLockView
             applications={applications}
             onSelectEtfBySymbol={handleSelectEtfByTicker}
+          />
+        )}
+
+        {activeTab === "price-monitor" && (
+          <TokensPriceMonitorView
+            livePrices={livePrices}
+            applications={applications}
+            onSelectEtf={handleSelectEtf}
+            onRefreshLivePrices={handleManualRefreshPrices}
+            isRefreshing={isRefreshing}
+            lastUpdatedTime={lastUpdatedTime}
+            autoRefreshEnabled={autoRefreshEnabled}
+            onToggleAutoRefresh={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+            onSelectEtfByTicker={handleSelectEtfByTicker}
           />
         )}
 
@@ -643,15 +681,6 @@ export default function App() {
           syncLogs={syncLogs}
           lastScanTime={lastUpdatedTime}
           onSelectEtf={handleSelectEtf}
-        />
-      )}
-
-      {/* Mobile App & APK Download Center Modal */}
-      {isApkModalOpen && (
-        <ApkDownloadModal
-          isOpen={isApkModalOpen}
-          onClose={() => setIsApkModalOpen(false)}
-          applications={applications}
         />
       )}
     </div>

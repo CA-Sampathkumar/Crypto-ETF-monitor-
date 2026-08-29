@@ -129,7 +129,7 @@ export function ApkDownloadModal({ isOpen, onClose, applications }: ApkDownloadM
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE",
       ],
-      api_sources: ["Binance Public Spot API", "CoinGecko Spot Price API", "SEC EDGAR Search Index"],
+      api_sources: ["Live Spot Public APIs", "CoinGecko Spot Price API", "SEC EDGAR Search Index"],
       total_etfs_indexed: applications.length,
       data_snapshot: applications,
     };
@@ -259,7 +259,7 @@ npx cap open android # Or build directly: cd android && ./gradlew assembleDebug
 
                   <div className="text-xs text-[#888888] flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{applications.length} ETFs &amp; Real-time Binance / SEC feeds included</span>
+                    <span>{applications.length} ETFs &amp; Real-time Market / SEC feeds included</span>
                   </div>
                 </div>
               </div>
