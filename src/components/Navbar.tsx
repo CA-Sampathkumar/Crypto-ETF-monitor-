@@ -1,7 +1,6 @@
 import React from "react";
 import {
   ShieldCheck,
-  Sparkles,
   RefreshCw,
   FileSpreadsheet,
   PlusCircle,
@@ -169,6 +168,42 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
+            id="tab-custody-lock"
+            onClick={() => setActiveTab("custody-lock")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              activeTab === "custody-lock"
+                ? "bg-purple-950/80 text-purple-200 border border-purple-500/40 shadow-sm font-semibold"
+                : "text-[#888888] hover:text-[#e0e0e0] hover:bg-[#141414]"
+            }`}
+          >
+            <span>Custody &amp; Lock</span>
+          </button>
+
+          <button
+            id="tab-tokens-map"
+            onClick={() => setActiveTab("tokens-map")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              activeTab === "tokens-map"
+                ? "bg-cyan-950/80 text-cyan-200 border border-cyan-500/40 shadow-sm font-semibold"
+                : "text-[#888888] hover:text-[#e0e0e0] hover:bg-[#141414]"
+            }`}
+          >
+            <span>Tokens Map Chart</span>
+          </button>
+
+          <button
+            id="tab-issuer-wallets"
+            onClick={() => setActiveTab("issuer-wallets")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              activeTab === "issuer-wallets"
+                ? "bg-amber-950/80 text-amber-200 border border-amber-500/40 shadow-sm font-semibold"
+                : "text-[#888888] hover:text-[#e0e0e0] hover:bg-[#141414]"
+            }`}
+          >
+            <span>Issuer Wallets</span>
+          </button>
+
+          <button
             id="tab-process-map"
             onClick={() => setActiveTab("process-map")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
@@ -228,19 +263,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             Issuers
-          </button>
-
-          <button
-            id="tab-ai-analyst"
-            onClick={() => setActiveTab("ai-analyst")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              activeTab === "ai-analyst"
-                ? "bg-purple-950/80 text-purple-200 border border-purple-500/40 shadow-sm font-semibold"
-                : "text-purple-400 hover:text-purple-200 hover:bg-purple-950/30"
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            <span>AI Analyst</span>
           </button>
         </div>
 

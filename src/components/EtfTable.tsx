@@ -38,7 +38,6 @@ import { PaginationControls } from "./PaginationControls";
 interface EtfTableProps {
   applications: ETFApplication[];
   onSelectEtf: (app: ETFApplication) => void;
-  onAnalyzeAi: (app: ETFApplication) => void;
   watchlistIds?: Set<string>;
   onToggleWatchlist?: (id: string) => void;
 }
@@ -46,7 +45,6 @@ interface EtfTableProps {
 export const EtfTable: React.FC<EtfTableProps> = ({
   applications,
   onSelectEtf,
-  onAnalyzeAi,
   watchlistIds = new Set(),
   onToggleWatchlist,
 }) => {
@@ -862,13 +860,6 @@ export const EtfTable: React.FC<EtfTableProps> = ({
                       {/* Action Buttons */}
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => onAnalyzeAi(app)}
-                            title="AI Regulatory Legal Analysis"
-                            className="p-1.5 rounded-lg bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 border border-purple-500/30 transition-colors cursor-pointer"
-                          >
-                            <Sparkles className="w-3.5 h-3.5" />
-                          </button>
                           <button
                             onClick={() => onSelectEtf(app)}
                             title="View Full SEC Filing Dossier"

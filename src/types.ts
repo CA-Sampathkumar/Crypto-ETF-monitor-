@@ -158,16 +158,116 @@ export interface IssuerSummary {
   tokensCovered: string[];
 }
 
-export interface TokenNetworkImpact {
-  affectedTokenSymbol: string; // e.g. "BTC" or "Unknown"
-  affectedTokenName: string; // e.g. "Bitcoin" or "Unknown"
-  livePriceUsd?: number;
-  price24hChange?: number;
-  marketCapUsd?: number;
-  relativeImpactRating: "HIGH" | "MEDIUM" | "LOW" | "NEUTRAL";
-  impactScorePercent?: number;
-  impactLabel: string;
-  isEstimate: boolean; // Always true - clearly marked as estimate
+export interface TokenCustodyLockAnalysis {
+  tokenSymbol: string;
+  tokenName: string;
+  tokenIcon: string;
+  category: string;
+  priceUsd: number;
+  price24hChange: number;
+  circulatingSupply: number;
+  marketCapUsd: number;
+  totalTokensHeldInEtfs: number;
+  totalUsdLockedInEtfs: number;
+  percentageCirculatingSupplyLocked: number;
+  etfFilingsCount: number;
+  approvedFundsCount: number;
+  pendingFundsCount: number;
+  custodians: {
+    name: string;
+    type: string;
+    tokensHeld: number;
+    usdValue: number;
+    coldStoragePercentage: number;
+    insuranceCoverageMillionUsd: number;
+    jurisdiction: string;
+  }[];
+  stakingStatus: {
+    enabled: boolean;
+    yieldPercentage?: number;
+    stakedTokensCount: number;
+    stakedUsdValue: number;
+    unbondingPeriodDays: number;
+    custodySegregated: boolean;
+    notes: string;
+  };
+  securityAndAudits: {
+    soc1Compliant: boolean;
+    soc2Compliant: boolean;
+    multiSigScheme: string;
+    airGappedVaults: boolean;
+    rule15c3Segregation: boolean;
+  };
+}
+
+export interface UntappedTokenCandidate {
+  symbol: string;
+  name: string;
+  icon: string;
+  category: string;
+  priceUsd: number;
+  price24hChange: number;
+  marketCapUsd: number;
+  rank: number;
+  etfReadinessScore: number; // 0 - 100
+  hasActiveEtfApplication: boolean;
+  activeFilingCount: number;
+  activeTickers: string[];
+  commodityClassificationStatus: "CFTC PoW Commodity" | "Decentralized L1" | "Utility / Staking Protocol" | "DeFi Governance Token" | "RWA / Tokenized Asset";
+  cmeFuturesAvailable: boolean;
+  cmeReferenceRateAvailable: boolean;
+  qualifiedCustodianSupport: string[];
+  spotLiquidityRating: "Tier 1 (High Depth)" | "Tier 2 (Moderate Depth)" | "Tier 3 (Emerging Depth)";
+  issuersHoldingAsset: string[];
+  keyCatalysts: string;
+  suggestedListingExchange: ListingExchange;
+  suggestedCustodian: string;
+}
+
+export interface MasterWalletAddress {
+  label: string;
+  tokenSymbol: string;
+  network: string;
+  address: string;
+  explorerUrl: string;
+  explorerName: string;
+  multisigScheme: string;
+  custodian: string;
+  balanceTokens: number;
+  balanceUsd: number;
+  verifiedOnChain: boolean;
+  lastAudited: string;
+}
+
+export interface IssuerSupportedToken {
+  symbol: string;
+  name: string;
+  tokensHeld: number;
+  usdValue: number;
+  hasActiveEtf: boolean;
+  etfTicker?: string;
+  etfStatus?: string;
+  walletAddress?: string;
+  explorerUrl?: string;
+  explorerName?: string;
+  network?: string;
+  custodian?: string;
+  verifiedOnChain?: boolean;
+}
+
+export interface IssuerWalletInfo {
+  issuerId: string;
+  issuerName: string;
+  issuerLogo: string;
+  totalAumUsd: number;
+  totalCryptoHoldingsUsd: number;
+  knownCustodyWalletsCount: number;
+  primaryCustodians: string[];
+  supportedTokens: IssuerSupportedToken[];
+  masterWalletAddresses: MasterWalletAddress[];
+  untappedTokensHeldWithoutEtf: string[];
+  trustStructure: string;
+  cashAdministrator: string;
 }
 
 export type DailyEventType =
@@ -203,7 +303,6 @@ export interface DailyActivityItem {
   status: EtfStatus;
   reasonOrCatalyst?: string;
   etfApplicationId?: string;
-  tokenNetworkImpact?: TokenNetworkImpact;
   rawSecSource?: any;
 }
 

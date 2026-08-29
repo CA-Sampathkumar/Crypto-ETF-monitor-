@@ -3,7 +3,6 @@ import {
   Newspaper,
   Search,
   Filter,
-  Sparkles,
   ExternalLink,
   ShieldCheck,
   TrendingUp,
@@ -60,10 +59,6 @@ export const NewsFeedView: React.FC<NewsFeedViewProps> = ({
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory, selectedToken, selectedImpact]);
-  
-  // AI Impact Analysis state
-  const [analyzingNewsId, setAnalyzingNewsId] = useState<string | null>(null);
-  const [aiAnalysisResult, setAiAnalysisResult] = useState<{ id: string; text: string } | null>(null);
 
   // Add news modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -140,39 +135,6 @@ export const NewsFeedView: React.FC<NewsFeedViewProps> = ({
     const start = (currentPage - 1) * pageSize;
     return filteredNews.slice(start, start + pageSize);
   }, [filteredNews, currentPage, pageSize]);
-
-  const handleAnalyzeNewsAi = async (item: NewsItem) => {
-    setAnalyzingNewsId(item.id);
-    try {
-      const res = await fetch("/api/ai/analyze-news", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: item.title,
-          summary: item.summary,
-          content: item.content,
-          category: item.category,
-          relatedTokens: item.relatedTokens,
-        }),
-      });
-      const data = await res.json();
-      if (data.success && data.impactAnalysis) {
-        setAiAnalysisResult({ id: item.id, text: data.impactAnalysis });
-      } else {
-        setAiAnalysisResult({
-          id: item.id,
-          text: `### Quick Assessment\n- **Impact**: ${item.impactLevel}\n- **Catalyst**: Accelerates regulatory review timeline for ${item.relatedTokens.join(", ")}.\n- **Market Effect**: Positive institutional sentiment.`,
-        });
-      }
-    } catch (e) {
-      setAiAnalysisResult({
-        id: item.id,
-        text: `### Institutional Assessment\n- Key regulatory progression for ${item.relatedTokens.join(", ")}.\n- Reinforces surveillance and qualified custody compliance.`,
-      });
-    } finally {
-      setAnalyzingNewsId(null);
-    }
-  };
 
   const handleAddCustomNews = (e: React.FormEvent) => {
     e.preventDefault();
@@ -342,8 +304,6 @@ export const NewsFeedView: React.FC<NewsFeedViewProps> = ({
           </div>
         ) : (
           paginatedNews.map((item) => {
-            const isAnalyzing = analyzingNewsId === item.id;
-            const hasAiAnalysis = aiAnalysisResult?.id === item.id;
             const dbStatus = getFilingDatabaseStatus(item);
 
             return (
@@ -451,39 +411,21 @@ export const NewsFeedView: React.FC<NewsFeedViewProps> = ({
                   </div>
                 )}
 
-                {/* AI Impact Result Box */}
-                {hasAiAnalysis && (
-                  <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/30 text-xs text-purple-200 space-y-2 animate-in fade-in">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 font-bold text-purple-300">
-                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                        <span>AI Regulatory Impact Assessment</span>
-                      </div>
-                      <button
-                        onClick={() => setAiAnalysisResult(null)}
-                        className="text-[10px] text-purple-400 hover:text-white cursor-pointer"
-                      >
-                        Dismiss
-                      </button>
-                    </div>
-                    <div className="text-xs text-[#d8b4fe] whitespace-pre-line leading-relaxed font-sans">
-                      {aiAnalysisResult.text}
-                    </div>
-                  </div>
-                )}
-
-                {/* Footer Controls: Source link, AI Impact button */}
-                <div className="flex items-center justify-between pt-2 border-t border-[#181818] text-xs">
+                {/* Footer Controls: Source link */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#181818] text-xs">
                   <div className="flex items-center gap-3">
                     <a
+                      id={`btn-news-source-${item.id}`}
                       href={item.sourceUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-1 text-[#888888] hover:text-white transition-colors"
+                      className="px-3 py-1.5 rounded-xl bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 hover:text-white border border-purple-500/30 transition-all font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      title={`Open official source document at ${item.source}`}
                     >
-                      <span>Official Source</span>
-                      <ExternalLink className="w-3 h-3" />
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Source: {item.source}</span>
                     </a>
+
                     {item.relatedTickers && item.relatedTickers.length > 0 && (
                       <span className="text-[11px] text-[#666666]">
                         Tickers: <strong className="text-[#cccccc]">{item.relatedTickers.join(", ")}</strong>
@@ -491,14 +433,11 @@ export const NewsFeedView: React.FC<NewsFeedViewProps> = ({
                     )}
                   </div>
 
-                  <button
-                    onClick={() => handleAnalyzeNewsAi(item)}
-                    disabled={isAnalyzing}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-950/60 hover:bg-purple-900/60 text-purple-200 text-xs font-semibold border border-purple-500/30 transition-all cursor-pointer"
-                  >
-                    <Sparkles className={`w-3.5 h-3.5 text-purple-400 ${isAnalyzing ? "animate-spin" : ""}`} />
-                    <span>{isAnalyzing ? "Analyzing..." : "Analyze Regulatory Impact"}</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono text-[#666666]">
+                      SEC / Reg Date: {new Date().toISOString().split("T")[0]}
+                    </span>
+                  </div>
                 </div>
               </article>
             );

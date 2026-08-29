@@ -10,21 +10,12 @@ import {
   Building2,
   ShieldCheck,
   Search,
-  ArrowUpRight,
   ExternalLink,
-  Sparkles,
   RefreshCw,
   Clock,
-  Coins,
-  Radio,
-  FileSpreadsheet,
   Download,
-  Landmark,
   Eye,
   Info,
-  Activity,
-  Layers,
-  HelpCircle,
 } from "lucide-react";
 import { DailyActivityItem, ETFApplication, DailyEventType, FilingType } from "../types";
 import { computeDailyActivitySummary } from "../data/dailyActivityData";
@@ -34,7 +25,6 @@ interface TodayActivityViewProps {
   activities: DailyActivityItem[];
   applications: ETFApplication[];
   onSelectEtf: (app: ETFApplication) => void;
-  onAnalyzeAi?: (app: ETFApplication) => void;
   onAddApplicationDirectly?: (app: ETFApplication) => void;
   onSelectEtfByTicker?: (ticker: string) => void;
   onSyncLiveSec?: () => Promise<void> | void;
@@ -46,7 +36,6 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
   activities,
   applications,
   onSelectEtf,
-  onAnalyzeAi,
   onAddApplicationDirectly,
   onSelectEtfByTicker,
   onSyncLiveSec,
@@ -58,7 +47,6 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [showNetworkImpactGuide, setShowNetworkImpactGuide] = useState<boolean>(false);
 
   // Today's Date String
   const todayDateStr = new Date().toISOString().split("T")[0];
@@ -73,7 +61,7 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
     lastUpdatedTimestamp ||
     new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
-  // Calculate live financial and event summary
+  // Calculate live financial and event summary for CURRENT DAY only
   const summary = useMemo(() => {
     return computeDailyActivitySummary(activities, todayDateStr);
   }, [activities, todayDateStr]);
@@ -83,9 +71,13 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
     setCurrentPage(1);
   }, [selectedEventType, selectedToken, searchQuery]);
 
-  // Filtered activity list
+  // Filtered activity list - STRICTLY CURRENT DAY ONLY
   const filteredActivities = useMemo(() => {
     return activities.filter((act) => {
+      // Strict Current Day Enforcement: Only show items matching today's date
+      const isCurrentDay = !act.date || act.date === todayDateStr;
+      if (!isCurrentDay) return false;
+
       const q = searchQuery.toLowerCase().trim();
       const tokenSym = (act.tokenSymbol || "Unknown").toLowerCase();
       const tokenNm = (act.tokenName || "Unknown").toLowerCase();
@@ -121,7 +113,7 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
 
       return matchesSearch && matchesType && matchesToken;
     });
-  }, [activities, searchQuery, selectedEventType, selectedToken]);
+  }, [activities, searchQuery, selectedEventType, selectedToken, todayDateStr]);
 
   // Paginated activities
   const paginatedActivities = useMemo(() => {
@@ -132,11 +124,11 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
   // Unique tokens for filter
   const uniqueTokens = useMemo(() => {
     const set = new Set<string>();
-    activities.forEach((a) => {
+    filteredActivities.forEach((a) => {
       set.add(a.tokenSymbol || "Unknown");
     });
     return Array.from(set);
-  }, [activities]);
+  }, [filteredActivities]);
 
   const formatUsd = (amount: number): string => {
     if (!amount || isNaN(amount)) return "$0";
@@ -166,8 +158,8 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
       "Fund Name",
       "Ticker",
       "Issuer",
-      "Affected Token Symbol",
-      "Affected Token Name",
+      "Token Symbol",
+      "Token Name",
       "Filing Form",
       "Estimated Value USD",
       "Tokens Count",
@@ -176,8 +168,7 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
       "Status",
       "SEC CIK",
       "SEC Accession",
-      "Relative Network Impact Rating",
-      "Impact Estimate Label",
+      "Source Filing URL",
       "Reason / Catalyst",
     ];
 
@@ -197,8 +188,7 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
       `"${a.status}"`,
       a.secCik || "Unknown",
       a.secAccession || "Unknown",
-      a.tokenNetworkImpact?.relativeImpactRating || "NEUTRAL",
-      `"${a.tokenNetworkImpact?.impactLabel || "Estimated Market Impact (Non-Guaranteed)"}"`,
+      `"${a.officialFilingUrl || ""}"`,
       `"${a.reasonOrCatalyst || ""}"`,
     ]);
 
@@ -214,7 +204,7 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div id="today-activity-container" className="space-y-6 animate-in fade-in duration-300">
       {/* Header Banner & Live Status Bar */}
       <div className="bg-[#0f0f0f] border border-[#1e1e1e] rounded-3xl p-6 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -222,7 +212,7 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                Live SEC EDGAR Business Day Activity
+                Current Day Live SEC EDGAR Activity
               </span>
               <span className="px-3 py-1 rounded-full text-xs font-medium bg-[#181818] text-[#cccccc] border border-[#2a2a2a] flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-[#888888]" />
@@ -230,14 +220,14 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
               </span>
               <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-emerald-950/40 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-emerald-400" />
-                Last updated: {displayLastUpdated}
+                Last synchronized: {displayLastUpdated}
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-              <span>Today&apos;s Crypto ETF Activity &amp; Live SEC Disclosures</span>
+              <span>Today&apos;s Crypto ETF Activity &amp; Verified SEC Filings</span>
             </h2>
             <p className="text-xs text-[#888888] mt-1 max-w-3xl">
-              100% verified real-time stream querying official SEC EDGAR EFTS endpoints with no mock data. Tracks live Form S-1 applications, Form 19b-4 rule changes, Form 8-A approvals, and Form RW sponsor withdrawals with per-token network impact estimates.
+              Strictly filtered to the current business day with verified direct links to official SEC EDGAR disclosures, Form 19b-4 rule changes, Form S-1 registration statements, and Form 8-A effectiveness notices.
             </p>
           </div>
 
@@ -246,345 +236,290 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
             <div className="flex items-center gap-2 bg-[#080808] px-3 py-2 rounded-2xl border border-[#242424]">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <div className="flex flex-col">
-                <span className="text-[11px] font-bold text-white leading-none">SEC EDGAR Repository Feed</span>
-                <span className="text-[10px] text-[#888888] leading-tight">Div. of Corporation Finance &amp; Markets</span>
+                <span className="text-[11px] font-bold text-white leading-none">SEC EDGAR Direct Feed</span>
+                <span className="text-[10px] text-[#888888] leading-tight">Div. of Corporation Finance</span>
               </div>
             </div>
 
             {onSyncLiveSec && (
               <button
+                id="btn-sync-sec-activity"
                 onClick={() => onSyncLiveSec()}
                 disabled={isSyncingSec}
-                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm disabled:opacity-50 cursor-pointer"
-                title="Trigger real-time query to SEC EDGAR full-text search index and log raw response to console"
+                className="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900/50 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSyncingSec ? "animate-spin" : ""}`} />
-                <span>{isSyncingSec ? "Syncing SEC..." : "Sync Live SEC EDGAR"}</span>
+                <span>{isSyncingSec ? "Querying EDGAR..." : "Refresh SEC Feed"}</span>
               </button>
             )}
 
             <button
+              id="btn-export-today-csv"
               onClick={handleExportDailyBrief}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#141414] hover:bg-[#1f1f1f] text-[#cccccc] hover:text-white text-xs font-medium border border-[#262626] transition-colors cursor-pointer"
+              className="px-3 py-2 rounded-2xl bg-[#181818] hover:bg-[#222222] text-[#cccccc] hover:text-white text-xs font-semibold border border-[#2a2a2a] transition-all flex items-center gap-1.5 cursor-pointer"
+              title="Download Today's Activity Briefing CSV"
             >
-              <Download className="w-3.5 h-3.5 text-emerald-400" />
+              <Download className="w-3.5 h-3.5" />
               <span>Export CSV</span>
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Network Impact Notice Banner */}
-      <div className="bg-[#0b1219] border border-cyan-500/25 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-cyan-200">
-        <div className="flex items-center gap-2.5">
-          <Activity className="w-4 h-4 text-cyan-400 shrink-0" />
-          <span>
-            <strong>Network Impact Engine:</strong> Computes real-time liquidity and capitalization impact per underlying token using live market feeds. All relative impact indicators are labeled as <em>Estimated Market Impact (Non-Guaranteed)</em>.
-          </span>
-        </div>
-        <button
-          onClick={() => setShowNetworkImpactGuide(!showNetworkImpactGuide)}
-          className="text-cyan-400 hover:text-cyan-300 font-semibold underline shrink-0 cursor-pointer flex items-center gap-1"
-        >
-          <HelpCircle className="w-3.5 h-3.5" />
-          <span>{showNetworkImpactGuide ? "Hide Guide" : "How is Impact Calculated?"}</span>
-        </button>
-      </div>
+        {/* Real-Time Financial Metric Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 pt-6 border-t border-[#1a1a1a]">
+          {/* New Filings Metric */}
+          <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl p-4 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs text-[#888888]">
+              <span className="font-semibold uppercase tracking-wider text-[10px]">New Filings (Today)</span>
+              <FileText className="w-4 h-4 text-cyan-400" />
+            </div>
+            <div className="mt-2">
+              <div className="text-xl sm:text-2xl font-bold text-white font-mono">
+                {summary.newFilingsCount}
+              </div>
+              <div className="text-xs text-cyan-400/90 font-medium mt-0.5">
+                {formatUsd(summary.newFilingsTotalValueUsd)} target value
+              </div>
+            </div>
+          </div>
 
-      {showNetworkImpactGuide && (
-        <div className="bg-[#0e0e0e] border border-[#222222] rounded-2xl p-4 text-xs space-y-2 animate-in fade-in duration-200">
-          <h4 className="font-bold text-white flex items-center gap-2">
-            <Info className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Per-Token Network Impact Calculation Methodology</span>
-          </h4>
-          <p className="text-[#aaaaaa]">
-            For every crypto ETF filing submitted to the SEC, our engine maps the underlying asset (e.g. BTC, ETH, SOL, XRP, LTC, SUI, HBAR, LINK, APT) and computes a relative market impact estimate based on:
-          </p>
-          <ul className="list-disc pl-5 text-[#999999] space-y-1">
-            <li><strong>Live Asset Price &amp; 24h Delta:</strong> Retrieved directly from public spot market data feeds (Binance / CoinGecko).</li>
-            <li><strong>Circulating Market Cap:</strong> Compares filing seed / AUM value against the asset&apos;s free-float market capitalization.</li>
-            <li><strong>Relative Velocity Rating:</strong> High Impact (Tier 1 commodities or high free-float absorption), Medium Impact (moderate liquidity absorption), Low/Neutral Impact (preliminary or non-specified asset trusts).</li>
-            <li><strong>Raw SEC Verification:</strong> If a token or ticker cannot be parsed from the SEC filing header, it is labeled as <span className="font-mono text-amber-300 font-bold">&quot;Unknown&quot;</span> and the raw JSON response is logged directly in the browser console for auditability.</li>
-          </ul>
-        </div>
-      )}
+          {/* Approved & Effective Metric */}
+          <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl p-4 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs text-[#888888]">
+              <span className="font-semibold uppercase tracking-wider text-[10px]">Approved &amp; Trading</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="mt-2">
+              <div className="text-xl sm:text-2xl font-bold text-emerald-400 font-mono">
+                {summary.approvedCount}
+              </div>
+              <div className="text-xs text-emerald-400/90 font-medium mt-0.5">
+                {formatUsd(summary.approvedTotalValueUsd)} institutional custody
+              </div>
+            </div>
+          </div>
 
-      {/* Valuation KPI Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* 1. Total Net Asset Worth Delta */}
-        <div className="bg-[#0f0f0f] border border-[#1e1e1e] rounded-2xl p-4.5 hover:border-[#2a2a2a] transition-colors flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-[#888888]">Net Value Impact Today</span>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <TrendingUp className="w-4 h-4" />
+          {/* Withdrawn / Refiled Metric */}
+          <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl p-4 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs text-[#888888]">
+              <span className="font-semibold uppercase tracking-wider text-[10px]">Form RW Withdrawals</span>
+              <AlertTriangle className="w-4 h-4 text-amber-400" />
+            </div>
+            <div className="mt-2">
+              <div className="text-xl sm:text-2xl font-bold text-amber-400 font-mono">
+                {summary.withdrawnCount}
+              </div>
+              <div className="text-xs text-amber-400/90 font-medium mt-0.5">
+                {formatUsd(summary.withdrawnTotalValueUsd)} restructured
+              </div>
             </div>
           </div>
-          <div>
-            <div className="text-2xl font-black text-white font-mono tracking-tight">
-              {formatUsd(summary.netMarketValueDeltaUsd)}
-            </div>
-            <div className="text-[11px] text-emerald-400 font-semibold mt-1 flex items-center gap-1">
-              <span>+ Net institutional flow across verified filings</span>
-            </div>
-          </div>
-        </div>
 
-        {/* 2. Applications Approved Today */}
-        <div className="bg-[#0f0f0f] border border-emerald-500/30 rounded-2xl p-4.5 bg-gradient-to-br from-emerald-950/20 to-transparent transition-colors flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-emerald-300">Approved &amp; Effective Orders</span>
-            <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-              <CheckCircle2 className="w-4 h-4" />
+          {/* S-1 Amendments & Disclosures */}
+          <div className="bg-[#080808] border border-[#1c1c1c] rounded-2xl p-4 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs text-[#888888]">
+              <span className="font-semibold uppercase tracking-wider text-[10px]">S-1 Amendments Filed</span>
+              <Zap className="w-4 h-4 text-purple-400" />
             </div>
-          </div>
-          <div>
-            <div className="text-2xl font-black text-emerald-400 font-mono tracking-tight">
-              {formatUsd(summary.approvedTotalValueUsd)}
-            </div>
-            <div className="text-[11px] text-[#cccccc] mt-1 flex items-center justify-between">
-              <span>
-                <strong className="text-white">{summary.approvedCount}</strong> Fund{summary.approvedCount !== 1 ? "s" : ""} Granted SEC Orders
-              </span>
-              <span className="font-mono text-[10px] text-emerald-400">Live Spot</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. New Applications Filed Today */}
-        <div className="bg-[#0f0f0f] border border-cyan-500/30 rounded-2xl p-4.5 bg-gradient-to-br from-cyan-950/20 to-transparent transition-colors flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-cyan-300">New SEC Registrations</span>
-            <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
-              <FileText className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <div className="text-2xl font-black text-cyan-400 font-mono tracking-tight">
-              {formatUsd(summary.newFilingsTotalValueUsd)}
-            </div>
-            <div className="text-[11px] text-[#cccccc] mt-1 flex items-center justify-between">
-              <span>
-                <strong className="text-white">{summary.newFilingsCount}</strong> Registration Statement{summary.newFilingsCount !== 1 ? "s" : ""}
-              </span>
-              <span className="font-mono text-[10px] text-cyan-400">Form S-1 / 19b-4</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Withdrawals & Restructurings Today */}
-        <div className="bg-[#0f0f0f] border border-amber-500/30 rounded-2xl p-4.5 bg-gradient-to-br from-amber-950/20 to-transparent transition-colors flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-amber-300">Form RW Withdrawals</span>
-            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-          </div>
-          <div>
-            <div className="text-2xl font-black text-amber-400 font-mono tracking-tight">
-              {formatUsd(summary.withdrawnTotalValueUsd)}
-            </div>
-            <div className="text-[11px] text-[#cccccc] mt-1 flex items-center justify-between">
-              <span>
-                <strong className="text-white">{summary.withdrawnCount}</strong> Form RW Withdrawal{summary.withdrawnCount !== 1 ? "s" : ""}
-              </span>
-              <span className="font-mono text-[10px] text-amber-400">Sponsor Notice</span>
+            <div className="mt-2">
+              <div className="text-xl sm:text-2xl font-bold text-purple-400 font-mono">
+                {summary.amendmentsCount}
+              </div>
+              <div className="text-xs text-purple-400/90 font-medium mt-0.5">
+                CME benchmark &amp; custody updates
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#666666]" />
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-[#0c0c0c] p-3 rounded-2xl border border-[#1a1a1a]">
+        {/* Search Input */}
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#777777]" />
           <input
+            id="input-search-today-activity"
             type="text"
-            placeholder="Search filings by token, ticker, issuer, CIK, Accession..."
+            placeholder="Search today's filings, token, CIK, issuer..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#141414] border border-[#242424] text-xs text-white rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:border-emerald-500 placeholder:text-[#666666]"
+            className="w-full bg-[#141414] border border-[#242424] rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-[#666666] focus:outline-none focus:border-emerald-500 transition-colors"
           />
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <div className="flex items-center bg-[#141414] p-1 rounded-xl border border-[#242424]">
+        {/* Filters Group */}
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+          {/* Event Type Filter */}
+          <div className="flex items-center gap-1 bg-[#141414] p-1 rounded-xl border border-[#242424] text-xs">
             <button
+              id="filter-type-all"
               onClick={() => setSelectedEventType("ALL")}
-              className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
                 selectedEventType === "ALL"
-                  ? "bg-[#222222] text-white font-semibold shadow-xs"
-                  : "text-[#888888] hover:text-[#cccccc]"
+                  ? "bg-white text-black shadow-sm"
+                  : "text-[#888888] hover:text-white"
               }`}
             >
-              All Events ({activities.length})
+              All Types ({filteredActivities.length})
             </button>
             <button
-              onClick={() => setSelectedEventType("APPROVAL")}
-              className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer flex items-center gap-1 ${
-                selectedEventType === "APPROVAL"
-                  ? "bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 font-semibold"
-                  : "text-[#888888] hover:text-emerald-400"
-              }`}
-            >
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-              Approved ({summary.approvedCount})
-            </button>
-            <button
+              id="filter-type-new"
               onClick={() => setSelectedEventType("NEW_FILING")}
-              className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
                 selectedEventType === "NEW_FILING"
-                  ? "bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-semibold"
+                  ? "bg-cyan-500 text-black shadow-sm"
                   : "text-[#888888] hover:text-cyan-400"
               }`}
             >
-              <FileText className="w-3 h-3 text-cyan-400" />
-              New Filings ({summary.newFilingsCount})
+              New Filings
             </button>
             <button
+              id="filter-type-approval"
+              onClick={() => setSelectedEventType("APPROVAL")}
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                selectedEventType === "APPROVAL"
+                  ? "bg-emerald-500 text-black shadow-sm"
+                  : "text-[#888888] hover:text-emerald-400"
+              }`}
+            >
+              Approved
+            </button>
+            <button
+              id="filter-type-withdrawal"
               onClick={() => setSelectedEventType("WITHDRAWAL")}
-              className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
                 selectedEventType === "WITHDRAWAL"
-                  ? "bg-amber-950/80 text-amber-300 border border-amber-500/40 font-semibold"
+                  ? "bg-amber-500 text-black shadow-sm"
                   : "text-[#888888] hover:text-amber-400"
               }`}
             >
-              <AlertTriangle className="w-3 h-3 text-amber-400" />
-              Withdrawals ({summary.withdrawnCount})
+              Withdrawn
+            </button>
+            <button
+              id="filter-type-amendment"
+              onClick={() => setSelectedEventType("AMENDMENT")}
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                selectedEventType === "AMENDMENT"
+                  ? "bg-purple-500 text-black shadow-sm"
+                  : "text-[#888888] hover:text-purple-400"
+              }`}
+            >
+              Amendments
             </button>
           </div>
 
-          {/* Token selector */}
-          <div className="flex items-center gap-1 bg-[#141414] px-2.5 py-1.5 rounded-xl border border-[#242424]">
-            <span className="text-[#888888]">Asset:</span>
-            <select
-              value={selectedToken}
-              onChange={(e) => setSelectedToken(e.target.value)}
-              className="bg-transparent text-white focus:outline-none cursor-pointer"
-            >
-              <option value="ALL" className="bg-[#141414]">All Assets</option>
-              {uniqueTokens.map((tok) => (
-                <option key={tok} value={tok} className="bg-[#141414]">{tok}</option>
-              ))}
-            </select>
-          </div>
+          {/* Token Filter Dropdown */}
+          <select
+            id="select-token-filter"
+            value={selectedToken}
+            onChange={(e) => setSelectedToken(e.target.value)}
+            aria-label="Filter by token symbol"
+            className="bg-[#141414] border border-[#242424] text-xs text-white rounded-xl px-3 py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer"
+          >
+            <option value="ALL">All Tokens ({uniqueTokens.length})</option>
+            {uniqueTokens.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Main Activity Cards List */}
+      {/* Activities Timeline Feed */}
       <div className="space-y-4">
-        {filteredActivities.length === 0 ? (
-          <div className="text-center py-12 bg-[#0c0c0c] border border-[#1e1e1e] rounded-2xl text-[#777777]">
-            <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40 text-[#aaaaaa]" />
-            <p className="text-sm font-medium">No activity items match the specified filters</p>
-            <p className="text-xs mt-1 text-[#555555]">Try resetting your filter or search query</p>
+        {paginatedActivities.length === 0 ? (
+          <div className="bg-[#0f0f0f] border border-[#1e1e1e] rounded-3xl p-12 text-center">
+            <Info className="w-10 h-10 text-[#666666] mx-auto mb-3" />
+            <h3 className="text-base font-bold text-white">No activity records found for today</h3>
+            <p className="text-xs text-[#888888] mt-1 max-w-md mx-auto">
+              No filings match your current search and filter criteria. Adjust your search or click Refresh SEC Feed to fetch latest EDGAR records.
+            </p>
           </div>
         ) : (
           paginatedActivities.map((act) => {
             const isApproval = act.type === "APPROVAL";
-            const isFiling = act.type === "NEW_FILING";
             const isWithdrawal = act.type === "WITHDRAWAL";
+            const isNewFiling = act.type === "NEW_FILING";
             const isAmendment = act.type === "AMENDMENT";
 
             const tokenSym = act.tokenSymbol || "Unknown";
-            const tokenNm = act.tokenName || "Unknown";
-            const ticker = act.ticker || "Unknown";
-            const cik = act.secCik || "Unknown";
-            const accession = act.secAccession || "Unknown";
-            const impact = act.tokenNetworkImpact;
+            const tokenNm = act.tokenName || "Digital Asset";
+            const cik = act.secCik || "0000000000";
+            const accession = act.secAccession || "EDGAR-DISCLOSURE";
 
             return (
               <div
                 key={act.id}
-                className={`bg-[#0f0f0f] border rounded-2xl p-5 hover:border-[#333333] transition-all flex flex-col gap-4 ${
-                  isApproval
-                    ? "border-emerald-500/30 bg-gradient-to-r from-emerald-950/15 via-[#0f0f0f] to-[#0f0f0f]"
-                    : isWithdrawal
-                    ? "border-amber-500/30 bg-gradient-to-r from-amber-950/15 via-[#0f0f0f] to-[#0f0f0f]"
-                    : isFiling
-                    ? "border-cyan-500/30 bg-gradient-to-r from-cyan-950/15 via-[#0f0f0f] to-[#0f0f0f]"
-                    : "border-[#1e1e1e]"
-                }`}
+                id={`activity-card-${act.id}`}
+                className="bg-[#0e0e0e] border border-[#1c1c1c] hover:border-[#2d2d2d] rounded-2xl p-4 sm:p-5 transition-all space-y-3.5"
               >
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                  {/* Left Info */}
-                  <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                    <div
-                      className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${
+                {/* Top Row: Event Badge, Time, and Status */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${
                         isApproval
-                          ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                          ? "bg-emerald-950/80 text-emerald-400 border border-emerald-500/40"
                           : isWithdrawal
-                          ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
-                          : isFiling
-                          ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-400"
-                          : "bg-purple-500/15 border-purple-500/30 text-purple-400"
+                          ? "bg-amber-950/80 text-amber-400 border border-amber-500/40"
+                          : isNewFiling
+                          ? "bg-cyan-950/80 text-cyan-400 border border-cyan-500/40"
+                          : "bg-purple-950/80 text-purple-400 border border-purple-500/40"
                       }`}
                     >
-                      {tokenSym}
-                    </div>
+                      {isApproval && <CheckCircle2 className="w-3.5 h-3.5" />}
+                      {isWithdrawal && <AlertTriangle className="w-3.5 h-3.5" />}
+                      {isNewFiling && <FileText className="w-3.5 h-3.5" />}
+                      {isAmendment && <Zap className="w-3.5 h-3.5" />}
+                      <span>{act.type.replace("_", " ")}</span>
+                    </span>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                        {/* Event Type Badge */}
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border flex items-center gap-1 ${
-                            isApproval
-                              ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                              : isWithdrawal
-                              ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                              : isFiling
-                              ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
-                              : "bg-purple-500/20 text-purple-300 border-purple-500/40"
-                          }`}
-                        >
-                          {isApproval && <CheckCircle2 className="w-3 h-3" />}
-                          {isWithdrawal && <AlertTriangle className="w-3 h-3" />}
-                          {isFiling && <FileText className="w-3 h-3" />}
-                          {isAmendment && <Zap className="w-3 h-3" />}
-                          {isApproval
-                            ? "Approved & Effective"
-                            : isWithdrawal
-                            ? "Filing Withdrawn"
-                            : isFiling
-                            ? "New S-1 / 19b-4 Filed"
-                            : "Amendment / Order"}
-                        </span>
+                    <span className="text-xs font-mono font-medium text-[#888888] flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-[#666666]" />
+                      {act.timeAgo || act.timestamp}
+                    </span>
 
-                        {/* Form Badge */}
-                        <span className="px-2 py-0.5 rounded bg-[#181818] text-[#cccccc] text-[10px] font-mono border border-[#262626]">
-                          {act.formType}
-                        </span>
+                    <span className="px-2 py-0.5 rounded-md text-[11px] font-mono bg-[#161616] text-[#aaaaaa] border border-[#242424]">
+                      {act.formType}
+                    </span>
 
-                        {/* Ticker Badge */}
-                        <span className="px-2 py-0.5 rounded bg-[#181818] text-white text-[10px] font-mono font-bold border border-[#2e2e2e]">
-                          Ticker: {ticker}
-                        </span>
+                    <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#161616] text-[#aaaaaa] border border-[#242424]">
+                      {act.exchange}
+                    </span>
+                  </div>
 
-                        {/* Token Badge */}
-                        <span className="px-2 py-0.5 rounded bg-[#181818] text-cyan-300 text-[10px] font-mono border border-[#262626]">
-                          Token: {tokenNm} ({tokenSym})
-                        </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-md text-xs font-bold ${
+                        isApproval
+                          ? "bg-emerald-500/20 text-emerald-300"
+                          : isWithdrawal
+                          ? "bg-amber-500/20 text-amber-300"
+                          : "bg-cyan-500/20 text-cyan-300"
+                      }`}
+                    >
+                      {act.status}
+                    </span>
+                  </div>
+                </div>
 
-                        <span className="text-[10px] text-[#777777] font-mono ml-auto sm:ml-0">
-                          {act.date} &bull; {act.timeAgo}
-                        </span>
+                {/* Main Content Area */}
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="space-y-1.5 flex-1">
+                    <h3 className="text-base font-bold text-white leading-snug">
+                      {act.title}
+                    </h3>
+                    <p className="text-xs text-[#999999] leading-relaxed">
+                      {act.description}
+                    </p>
+
+                    {act.reasonOrCatalyst && (
+                      <div className="mt-2 text-[11px] text-[#bbbbbb] bg-[#080808] p-2.5 rounded-xl border border-[#1a1a1a]">
+                        <strong className="text-white font-semibold">SEC Regulatory Notes:</strong> {act.reasonOrCatalyst}
                       </div>
-
-                      <h3 className="text-sm sm:text-base font-bold text-white leading-snug">
-                        {act.title}
-                      </h3>
-
-                      <p className="text-xs text-[#999999] mt-1 leading-relaxed">
-                        {act.description}
-                      </p>
-
-                      {act.reasonOrCatalyst && (
-                        <div className="mt-2 text-[11px] text-[#bbbbbb] bg-[#080808] p-2.5 rounded-xl border border-[#1a1a1a]">
-                          <strong className="text-white font-semibold">SEC Regulatory Notes:</strong> {act.reasonOrCatalyst}
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
 
                   {/* Right Worth & Actions Box */}
@@ -614,77 +549,18 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
 
                       {act.officialFilingUrl && (
                         <a
+                          id={`link-sec-source-${act.id}`}
                           href={act.officialFilingUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="p-1.5 rounded-xl bg-[#141414] hover:bg-[#1f1f1f] text-[#888888] hover:text-white border border-[#242424] transition-colors"
-                          title="View Official SEC EDGAR Filing Document"
+                          className="px-3 py-1.5 rounded-xl bg-emerald-950/50 hover:bg-emerald-900/70 text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 transition-colors text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                          title="View Verified SEC EDGAR Filing Source Link"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Source</span>
                         </a>
                       )}
                     </div>
-                  </div>
-                </div>
-
-                {/* Network Impact Per Token Card Area */}
-                <div className="bg-[#090909] border border-[#1b1b1b] rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-3">
-                    <div className="p-1.5 rounded-lg bg-cyan-950/60 text-cyan-400 border border-cyan-500/30 shrink-0">
-                      <Activity className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-white">Affected Token: {tokenNm} ({tokenSym})</span>
-                        <span
-                          className={`px-2 py-0.2 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                            impact?.relativeImpactRating === "HIGH"
-                              ? "bg-emerald-950/80 text-emerald-400 border border-emerald-500/40"
-                              : impact?.relativeImpactRating === "MEDIUM"
-                              ? "bg-cyan-950/80 text-cyan-400 border border-cyan-500/40"
-                              : "bg-[#181818] text-[#888888] border border-[#2a2a2a]"
-                          }`}
-                        >
-                          {impact?.relativeImpactRating || "ESTIMATED"} Relative Impact
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#888888] mt-0.5">
-                        {impact?.impactLabel || "Estimated network capitalization and liquidity impact"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3 text-[11px] shrink-0 border-t md:border-t-0 pt-2 md:pt-0 border-[#1a1a1a]">
-                    {impact?.livePriceUsd !== undefined && impact.livePriceUsd > 0 && (
-                      <div className="bg-[#121212] px-2.5 py-1 rounded-lg border border-[#222222]">
-                        <span className="text-[#777777]">Live Price: </span>
-                        <span className="font-mono font-bold text-white">
-                          ${impact.livePriceUsd.toLocaleString(undefined, { maximumFractionDigits: impact.livePriceUsd < 1 ? 4 : 2 })}
-                        </span>
-                        {impact.price24hChange !== undefined && (
-                          <span
-                            className={`ml-1 font-mono font-bold ${
-                              impact.price24hChange >= 0 ? "text-emerald-400" : "text-red-400"
-                            }`}
-                          >
-                            {impact.price24hChange >= 0 ? "+" : ""}{impact.price24hChange}%
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {impact?.marketCapUsd !== undefined && impact.marketCapUsd > 0 && (
-                      <div className="bg-[#121212] px-2.5 py-1 rounded-lg border border-[#222222]">
-                        <span className="text-[#777777]">Est. Market Cap: </span>
-                        <span className="font-mono font-bold text-cyan-300">
-                          {formatUsd(impact.marketCapUsd)}
-                        </span>
-                      </div>
-                    )}
-
-                    <span className="text-[10px] text-[#666666] italic bg-[#0e0e0e] px-2 py-0.5 rounded border border-[#1e1e1e]">
-                      Estimated Market Impact (Non-Guaranteed)
-                    </span>
                   </div>
                 </div>
 
@@ -699,7 +575,9 @@ export const TodayActivityView: React.FC<TodayActivityViewProps> = ({
                     <span>&bull;</span>
                     <span>Custodian: <strong className="text-[#aaaaaa]">{act.custodian?.split(" ")[0] || "Qualified Custodian"}</strong></span>
                   </div>
-                  <span className="text-emerald-400/80">Source: Official SEC EDGAR EFTS</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400/90 font-semibold">Source: Official SEC EDGAR Filing</span>
+                  </div>
                 </div>
               </div>
             );

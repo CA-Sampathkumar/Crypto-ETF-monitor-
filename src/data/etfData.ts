@@ -3475,7 +3475,41 @@ const BASE_ETF_APPLICATIONS: ETFApplication[] = [
 const baseIds = new Set(BASE_ETF_APPLICATIONS.map((a) => a.id));
 const uniqueAdditionals = ADDITIONAL_ONLINE_CRYPTO_ETFS.filter((a) => !baseIds.has(a.id));
 
-export const INITIAL_ETF_APPLICATIONS: ETFApplication[] = [
+const ALL_RAW_APPLICATIONS: ETFApplication[] = [
   ...uniqueAdditionals,
   ...BASE_ETF_APPLICATIONS,
 ];
+
+/**
+ * Strict 240-Day Statutory Deadline Rule:
+ * - If an application has crossed the 240-day deadline WITHOUT approval, remove it from the database.
+ * - If approved (status === "Approved & Trading" or live spot ETP), keep/add to the database.
+ * - If pending and within the 240-day clock (daysRemaining > 0), keep active in the database.
+ */
+export function isApplicationCompliantWith240DayRule(app: ETFApplication): boolean {
+  const isApproved =
+    app.status === "Approved & Trading" ||
+    app.tradingCategory === "Live Spot ETF" ||
+    app.approvalProbabilityPercentage === 100 ||
+    app.status.toLowerCase().includes("approved");
+
+  if (isApproved) {
+    return true; // Always retain approved applications
+  }
+
+  // If not approved, verify 240-day deadline
+  if (app.statutoryDeadlines) {
+    if (app.statutoryDeadlines.daysRemaining !== undefined && app.statutoryDeadlines.daysRemaining <= 0) {
+      return false; // Crossed 240-day deadline without approval -> Remove from database
+    }
+  }
+
+  return true;
+}
+
+export function filterCompliantEtfApplications(apps: ETFApplication[]): ETFApplication[] {
+  return apps.filter(isApplicationCompliantWith240DayRule);
+}
+
+export const INITIAL_ETF_APPLICATIONS: ETFApplication[] = filterCompliantEtfApplications(ALL_RAW_APPLICATIONS);
+

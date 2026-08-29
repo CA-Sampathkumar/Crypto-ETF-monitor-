@@ -1,4 +1,4 @@
-import { DailyActivityItem, DailyEventType, TokenNetworkImpact } from "../types";
+import { DailyActivityItem, DailyEventType } from "../types";
 import { fetchLiveCryptoPrices, TOKEN_ID_MAP } from "./marketApi";
 
 export interface SecLiveApiResponse {
@@ -59,69 +59,6 @@ const ISSUER_LOOKUP: Array<{ name: string; keywords: string[] }> = [
 ];
 
 /**
- * Calculates Token Network Impact from live market price, 24h change, and estimated market cap
- */
-export function calculateTokenNetworkImpact(
-  tokenSymbol: string,
-  tokenName: string,
-  estimatedFundValueUsd: number,
-  livePrices: Record<string, any>
-): TokenNetworkImpact {
-  if (!tokenSymbol || tokenSymbol === "Unknown") {
-    return {
-      affectedTokenSymbol: "Unknown",
-      affectedTokenName: "Unknown",
-      relativeImpactRating: "NEUTRAL",
-      impactScorePercent: 0,
-      impactLabel: "Underlying token not specified in SEC filing header",
-      isEstimate: true,
-    };
-  }
-
-  const livePriceData = livePrices[tokenSymbol.toUpperCase()];
-  const price = livePriceData?.priceUsd || 0;
-  const change24h = livePriceData?.change24h || 0;
-
-  const foundToken = TOKEN_LOOKUP.find((t) => t.symbol === tokenSymbol.toUpperCase());
-  const supply = foundToken?.approxSupply || 100000000;
-  const marketCap = price > 0 ? price * supply : 0;
-
-  let rating: "HIGH" | "MEDIUM" | "LOW" = "MEDIUM";
-  let scorePercent = 65;
-  let impactLabel = `Moderate relative liquidity impact on ${tokenName}`;
-
-  if (["BTC", "ETH"].includes(tokenSymbol.toUpperCase())) {
-    rating = "HIGH";
-    scorePercent = 95;
-    impactLabel = `High institutional benchmark impact across global ${tokenName} liquidity depth`;
-  } else if (["SOL", "XRP", "DOGE"].includes(tokenSymbol.toUpperCase())) {
-    rating = "HIGH";
-    scorePercent = 88;
-    impactLabel = `High market impact: Significant institutional capital formation for ${tokenName}`;
-  } else if (["LTC", "HBAR", "SUI", "LINK", "APT", "HYPE"].includes(tokenSymbol.toUpperCase())) {
-    rating = "HIGH";
-    scorePercent = 82;
-    impactLabel = `High velocity impact: ETF reserve seed represents high percentage of free-float ${tokenName}`;
-  } else {
-    rating = "MEDIUM";
-    scorePercent = 55;
-    impactLabel = `Moderate estimated network sensitivity on ${tokenName}`;
-  }
-
-  return {
-    affectedTokenSymbol: tokenSymbol.toUpperCase(),
-    affectedTokenName: tokenName,
-    livePriceUsd: price > 0 ? price : undefined,
-    price24hChange: change24h,
-    marketCapUsd: marketCap > 0 ? marketCap : undefined,
-    relativeImpactRating: rating,
-    impactScorePercent: scorePercent,
-    impactLabel,
-    isEstimate: true,
-  };
-}
-
-/**
  * Fetches verified live crypto ETF activities directly from SEC EDGAR Search Index (EFTS)
  * and server proxy, logging the raw JSON response to console for transparent verification.
  */
@@ -129,7 +66,7 @@ export async function fetchLiveSecEdgarActivities(): Promise<SecLiveApiResponse>
   const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   console.log(`[SEC EDGAR Live Sync] Querying SEC EDGAR Search Index (EFTS) at ${timestamp}...`);
 
-  // First, fetch live market prices for accurate network impact calculation
+  // First, fetch live market prices
   let livePrices: Record<string, any> = {};
   try {
     livePrices = await fetchLiveCryptoPrices();
@@ -139,114 +76,84 @@ export async function fetchLiveSecEdgarActivities(): Promise<SecLiveApiResponse>
 
   // 1. Try querying our server proxy endpoint /api/sec/today-activity
   try {
-    const res = await fetch("/api/sec/today-activity");
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success && Array.isArray(data.activities) && data.activities.length > 0) {
-        console.log("[SEC EDGAR Raw Response - Server Live Stream]:", data);
-
-        // Enrich with fresh market prices
-        const enriched = data.activities.map((act: DailyActivityItem) => {
-          const impact = calculateTokenNetworkImpact(act.tokenSymbol, act.tokenName, act.estimatedValueUsd, livePrices);
-          return {
-            ...act,
-            tokenNetworkImpact: impact,
-          };
-        });
-
-        return {
-          success: true,
-          activities: enriched,
-          rawCount: data.rawSecCount || data.activities.length,
-          lastUpdated: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-          source: "SEC EDGAR Search Index (EFTS) - Live Server Feed",
-          rawSample: data.rawResponseSample,
-        };
+    const resp = await fetch("/api/sec/today-activity");
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.success && Array.isArray(data.activities) && data.activities.length > 0) {
+        console.log(`[SEC EDGAR Live Proxy]: Received ${data.activities.length} live filings from EDGAR proxy.`);
+        return data;
       }
     }
-  } catch (serverErr) {
-    console.warn("[Server SEC Endpoint Notice]:", serverErr);
+  } catch (proxyErr) {
+    console.log("[SEC EDGAR Live Proxy Note]: Proxy route inactive, attempting direct EFTS fallback.");
   }
 
-  // 2. Direct Query to SEC EDGAR EFTS: https://efts.sec.gov/LATEST/search-index
+  // 2. Direct client-side fetch from SEC EDGAR Public Search API
   try {
-    const queryUrl = `https://efts.sec.gov/LATEST/search-index?q=${encodeURIComponent('"crypto ETF" OR "Bitcoin ETF" OR "Ethereum ETF" OR "Solana ETF" OR "XRP ETF" OR "Litecoin ETF" OR "Dogecoin ETF" OR "Sui ETF" OR "Hedera ETF" OR "Trust"')}&forms=19b-4,S-1,S-1/A,19b-4/A,8-A12B,424B2,RW&size=50`;
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 7000);
+    const queryUrl = `https://efts.sec.gov/LATEST/search-index?q=%22spot%20bitcoin%22%20OR%20%22spot%20ether%22%20OR%20%22spot%20solana%22%20OR%20%22spot%20xrp%22%20OR%20%22spot%20litecoin%22%20OR%20%22spot%20dogecoin%22%20OR%20%22spot%20hedera%22%20OR%20%22crypto%20trust%22%20OR%20%22digital%20asset%20trust%22&startdt=${sevenDaysAgo}&enddt=${todayStr}&forms=S-1,S-1/A,19b-4,8-A12B,424B3,RW`;
 
-    const secRes = await fetch(queryUrl, {
+    const res = await fetch(queryUrl, {
       headers: {
-        "User-Agent": "CryptoETFTrackerApp/2.2 (Academic & Institutional Research; contact@cryptoetf-tracker.org)",
-        "Accept": "application/json",
+        Accept: "application/json",
       },
-      signal: controller.signal,
-    }).catch(() => null);
+    });
 
-    clearTimeout(timeout);
-
-    if (secRes && secRes.ok) {
-      const rawSecData = await secRes.json();
-      console.log("[SEC EDGAR Raw Response - Direct EFTS API (No Key Required)]:", rawSecData);
+    if (res.ok) {
+      const rawSecData = await res.json();
+      console.log("[SEC EDGAR EFTS Raw Response Received]:", rawSecData);
 
       const hits = rawSecData?.hits?.hits || [];
       const parsedActivities: DailyActivityItem[] = [];
 
       for (const hit of hits) {
-        const source = hit._source;
-        if (!source || !source.adsh) continue;
+        const source = hit._source || {};
+        const entityName = source.display_names?.[0] || source.entity_name || "SEC Registrant";
+        const form = (source.form || source.file_type || "S-1").toUpperCase();
+        const fileDate = source.file_date || todayStr;
+        const cik = source.ciks?.[0] || source.cik || "0000000000";
+        const adsh = source.adsh || hit._id || "";
 
-        const adsh = source.adsh;
-        const form = (source.form || source.root_form || "Form S-1").toUpperCase();
-        const fileDate = source.file_date || new Date().toISOString().split("T")[0];
-        const displayNames: string[] = source.display_names || [];
-        const rawName = displayNames[0] || source.file_description || "Crypto Trust";
-        const cik = source.ciks && source.ciks[0] ? source.ciks[0].padStart(10, "0") : "0000000000";
+        // Token identification
+        let tokenSymbol = "CRYPTO";
+        let tokenName = "Digital Asset Trust";
+        const lowerText = `${entityName} ${source.file_description || ""}`.toLowerCase();
 
-        // Detect underlying token
-        const fullSearchText = `${rawName} ${displayNames.join(" ")} ${source.file_description || ""}`.toLowerCase();
-        let detectedToken = TOKEN_LOOKUP.find((t) => t.keywords.some((k) => fullSearchText.includes(k)));
-
-        let tokenSymbol = detectedToken?.symbol || "Unknown";
-        let tokenName = detectedToken?.name || "Unknown";
-
-        if (tokenSymbol === "Unknown") {
-          console.warn("[SEC EDGAR Notice]: Token could not be determined from filing header. Marking as Unknown.", hit);
+        for (const t of TOKEN_LOOKUP) {
+          if (t.keywords.some((k) => lowerText.includes(k))) {
+            tokenSymbol = t.symbol;
+            tokenName = t.name;
+            break;
+          }
         }
 
-        // Detect ticker
-        let ticker = "Unknown";
-        const tickerMatch = rawName.match(/\(([A-Z0-9]{2,6})\)/);
-        if (tickerMatch && tickerMatch[1] && !tickerMatch[1].startsWith("CIK")) {
-          ticker = tickerMatch[1];
-        } else if (tokenSymbol !== "Unknown") {
-          ticker = tokenSymbol;
+        // Issuer identification
+        let issuer = "Institutional Asset Manager";
+        for (const iss of ISSUER_LOOKUP) {
+          if (iss.keywords.some((k) => lowerText.includes(k))) {
+            issuer = iss.name;
+            break;
+          }
         }
 
-        // Detect issuer
-        const detectedIssuer = ISSUER_LOOKUP.find((iss) =>
-          iss.keywords.some((k) => fullSearchText.includes(k))
-        );
-        const issuer = detectedIssuer?.name || rawName.split("(")[0].trim() || "Asset Manager";
+        const fundName = entityName.length > 5 ? entityName : `${issuer} ${tokenName} Trust`;
+        const ticker = tokenSymbol.length <= 4 ? tokenSymbol : "ETP";
 
-        // Clean fund name
-        let fundName = rawName.replace(/\(CIK.*?\)/gi, "").trim();
-        if (!fundName || fundName.length < 3) {
-          fundName = `${issuer} ${tokenName} ETF`;
-        }
-
-        // Classify event type
+        // Categorize event type
         let type: DailyEventType = "NEW_FILING";
         let status = "S-1 Registration Filed";
         let impactLevel: "HIGH" | "MEDIUM" | "LOW" = "MEDIUM";
-        let reasonOrCatalyst = "Official SEC EDGAR filing submitted to Commission repository.";
+        let reasonOrCatalyst = `Form ${form} registration submitted to the SEC Division of Corporation Finance.`;
 
         if (form.includes("RW")) {
           type = "WITHDRAWAL";
-          status = "Withdrawn by Sponsor";
+          status = "Application Withdrawn";
           impactLevel = "MEDIUM";
-          reasonOrCatalyst = "Voluntary Form RW Request for Withdrawal submitted by registrant.";
-        } else if (form.includes("8-A") || form.includes("424B") || form.includes("EFFECT")) {
+          reasonOrCatalyst = "Voluntary Form RW submitted under Securities Act Rule 477.";
+        } else if (form.includes("8-A") || form.includes("424B")) {
           type = "APPROVAL";
           status = "Approved & Trading";
           impactLevel = "HIGH";
@@ -269,8 +176,6 @@ export async function fetchLiveSecEdgarActivities(): Promise<SecLiveApiResponse>
         if (type === "APPROVAL") estimatedVal = price * 25000 + 500000000;
         else if (type === "WITHDRAWAL") estimatedVal = 45000000;
         else estimatedVal = price * 12000 + 40000000;
-
-        const networkImpact = calculateTokenNetworkImpact(tokenSymbol, tokenName, estimatedVal, livePrices);
 
         parsedActivities.push({
           id: `sec-live-${adsh.replace(/[^a-zA-Z0-9]/g, "")}`,
@@ -297,7 +202,6 @@ export async function fetchLiveSecEdgarActivities(): Promise<SecLiveApiResponse>
           impactLevel,
           status: status as any,
           reasonOrCatalyst,
-          tokenNetworkImpact: networkImpact,
           rawSecSource: hit,
         });
       }
@@ -317,21 +221,14 @@ export async function fetchLiveSecEdgarActivities(): Promise<SecLiveApiResponse>
     console.warn("[Direct SEC Fetch Notice]:", directErr);
   }
 
-  // 3. Fallback: Return verified base activities enriched with live token network impact
+  // 3. Fallback: Return verified base activities
   console.log("[SEC EDGAR Sync]: Using verified baseline repository calibrated against EDGAR CIK disclosures.");
   const { INITIAL_TODAY_ACTIVITIES } = await import("../data/dailyActivityData");
-  const enrichedBaseline = INITIAL_TODAY_ACTIVITIES.map((act) => {
-    const impact = calculateTokenNetworkImpact(act.tokenSymbol, act.tokenName, act.estimatedValueUsd, livePrices);
-    return {
-      ...act,
-      tokenNetworkImpact: impact,
-    };
-  });
 
   return {
     success: true,
-    activities: enrichedBaseline,
-    rawCount: enrichedBaseline.length,
+    activities: INITIAL_TODAY_ACTIVITIES,
+    rawCount: INITIAL_TODAY_ACTIVITIES.length,
     lastUpdated: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
     source: "SEC EDGAR Verified Repository (Reconciled Live)",
   };

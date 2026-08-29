@@ -79,7 +79,6 @@ const TOKEN_DETECTION_RULES: Array<{
   name: string;
   icon: string;
   category: TokenCat;
-  defaultPrice: number;
   keywords: string[];
 }> = [
   {
@@ -87,7 +86,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Bitcoin",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/bitcoin/info/logo.png",
     category: "Store of Value",
-    defaultPrice: 96500,
     keywords: ["bitcoin", "btc", "satoshi", "xbt"],
   },
   {
@@ -95,7 +93,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Ethereum",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png",
     category: "Smart Contracts (L1)",
-    defaultPrice: 2850,
     keywords: ["ethereum", "ether", "eth"],
   },
   {
@@ -103,7 +100,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Solana",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png",
     category: "Smart Contracts (L1)",
-    defaultPrice: 195,
     keywords: ["solana", "sol"],
   },
   {
@@ -111,7 +107,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "XRP",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ripple/info/logo.png",
     category: "Payment & Settlements",
-    defaultPrice: 2.65,
     keywords: ["ripple", "xrp"],
   },
   {
@@ -119,7 +114,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Litecoin",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/litecoin/info/logo.png",
     category: "Payment & Settlements",
-    defaultPrice: 118,
     keywords: ["litecoin", "ltc"],
   },
   {
@@ -127,7 +121,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Dogecoin",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/doge/info/logo.png",
     category: "Meme & Community",
-    defaultPrice: 0.285,
     keywords: ["dogecoin", "doge"],
   },
   {
@@ -135,7 +128,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Hyperliquid",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/arbitrum/info/logo.png",
     category: "DeFi & Financial Infrastructure",
-    defaultPrice: 28.5,
     keywords: ["hyperliquid", "hype"],
   },
   {
@@ -143,7 +135,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Sui",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/sui/info/logo.png",
     category: "Smart Contracts (L1)",
-    defaultPrice: 3.45,
     keywords: ["sui network", "sui token", "sui foundation", "sui etf", "sui trust"],
   },
   {
@@ -151,7 +142,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Cardano",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/cardano/info/logo.png",
     category: "Smart Contracts (L1)",
-    defaultPrice: 0.82,
     keywords: ["cardano", "ada"],
   },
   {
@@ -159,7 +149,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Aptos",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/aptos/info/logo.png",
     category: "Smart Contracts (L1)",
-    defaultPrice: 8.95,
     keywords: ["aptos", "apt"],
   },
   {
@@ -167,7 +156,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Avalanche",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/avalanchec/info/logo.png",
     category: "Smart Contracts (L1)",
-    defaultPrice: 31.5,
     keywords: ["avalanche", "avax"],
   },
   {
@@ -175,7 +163,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Chainlink",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x514910771AF9Ca656af840dff83E8264EcF986CA/logo.png",
     category: "Oracle & Infrastructure",
-    defaultPrice: 19.8,
     keywords: ["chainlink", "link"],
   },
   {
@@ -183,7 +170,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Hedera",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/hedera/info/logo.png",
     category: "Enterprise DLT" as any,
-    defaultPrice: 0.24,
     keywords: ["hedera", "hbar", "hashgraph"],
   },
   {
@@ -191,7 +177,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Bittensor",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polkadot/info/logo.png",
     category: "AI & Decentralized Compute",
-    defaultPrice: 485,
     keywords: ["bittensor", "tao"],
   },
   {
@@ -199,7 +184,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Polkadot",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polkadot/info/logo.png",
     category: "Smart Contracts (L1)",
-    defaultPrice: 6.8,
     keywords: ["polkadot", "dot"],
   },
   {
@@ -207,7 +191,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Bitcoin Cash",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/bitcoincash/info/logo.png",
     category: "Payment & Settlements",
-    defaultPrice: 460,
     keywords: ["bitcoin cash", "bch"],
   },
   {
@@ -215,7 +198,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "NEAR Protocol",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/near/info/logo.png",
     category: "Smart Contracts (L1)",
-    defaultPrice: 5.4,
     keywords: ["near protocol", "near"],
   },
   {
@@ -223,7 +205,6 @@ const TOKEN_DETECTION_RULES: Array<{
     name: "Crypto Basket Index",
     icon: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/info/logo.png",
     category: "Multi-Asset Index",
-    defaultPrice: 48.5,
     keywords: ["basket", "index", "top 10", "multi-crypto", "crypto 10"],
   },
 ];
@@ -576,10 +557,10 @@ export class SecEdgarSyncEngine {
         tokenName: detectedToken.name,
         tokenIcon: detectedToken.icon,
         tokenCategory: detectedToken.category,
-        currentPriceUsd: detectedToken.defaultPrice,
-        price24hChange: Number(((Math.random() - 0.45) * 4).toFixed(2)),
+        currentPriceUsd: 0,
+        price24hChange: 0,
         circulatingSupply: 50000000,
-        marketCapUsd: detectedToken.defaultPrice * 50000000,
+        marketCapUsd: 0,
         fundName: cleanFundName,
         ticker: tickerGuess,
         issuer: issuerName,
@@ -588,7 +569,7 @@ export class SecEdgarSyncEngine {
         sponsorFeePercentage: 0.25,
         feeWaiverPeriod: "0.00% fee waiver for initial period",
         tokensHeld: Math.round(50000 * Math.random() + 5000),
-        portfolioValueUsd: Math.round(detectedToken.defaultPrice * 10000),
+        portfolioValueUsd: 0,
         percentageOfCirculatingSupply: 0.02,
         stakingEnabled: titleAndNames.includes("staking") || titleAndNames.includes("yield"),
         stakingStatusNote: titleAndNames.includes("staking")

@@ -23,7 +23,6 @@ import { ETFApplication } from "../types";
 interface EtfDetailModalProps {
   application: ETFApplication | null;
   onClose: () => void;
-  onAnalyzeAi: (app: ETFApplication) => void;
   isStarred?: boolean;
   onToggleWatchlist?: (id: string) => void;
 }
@@ -31,7 +30,6 @@ interface EtfDetailModalProps {
 export const EtfDetailModal: React.FC<EtfDetailModalProps> = ({
   application,
   onClose,
-  onAnalyzeAi,
   isStarred = false,
   onToggleWatchlist,
 }) => {
@@ -378,18 +376,8 @@ export const EtfDetailModal: React.FC<EtfDetailModalProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                onClose();
-                onAnalyzeAi(application);
-              }}
-              className="px-4 py-2 rounded-xl bg-purple-950/80 hover:bg-purple-900 text-purple-200 border border-purple-500/40 text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-              <span>Launch AI Legal Analysis</span>
-            </button>
-            <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-[#181818] hover:bg-[#222222] text-[#cccccc] hover:text-white border border-[#2a2a2a] text-xs font-semibold transition-colors"
+              className="px-4 py-2 rounded-xl bg-[#181818] hover:bg-[#222222] text-[#cccccc] hover:text-white border border-[#2a2a2a] text-xs font-semibold transition-colors cursor-pointer"
             >
               Close
             </button>

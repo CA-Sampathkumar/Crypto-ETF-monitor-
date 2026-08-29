@@ -23,13 +23,11 @@ import { PaginationControls } from "./PaginationControls";
 interface TimelineDeadlinesViewProps {
   applications: ETFApplication[];
   onSelectEtf: (app: ETFApplication) => void;
-  onAnalyzeAi: (app: ETFApplication) => void;
 }
 
 export const TimelineDeadlinesView: React.FC<TimelineDeadlinesViewProps> = ({
   applications,
   onSelectEtf,
-  onAnalyzeAi,
 }) => {
   const [filterToken, setFilterToken] = useState<string>("ALL");
   const [filterPathway, setFilterPathway] = useState<"ALL" | "75_DAYS" | "240_DAYS">("ALL");
@@ -436,15 +434,8 @@ export const TimelineDeadlinesView: React.FC<TimelineDeadlinesViewProps> = ({
 
                       <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button
-                          onClick={() => onAnalyzeAi(app)}
-                          className="px-3 py-1.5 rounded-lg bg-purple-950/80 hover:bg-purple-900 text-purple-200 border border-purple-500/40 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                        >
-                          <Sparkles className="w-3 h-3 text-purple-400" />
-                          <span>AI Odds</span>
-                        </button>
-                        <button
                           onClick={() => onSelectEtf(app)}
-                          className="px-3 py-1.5 rounded-lg bg-[#181818] hover:bg-[#222222] text-[#cccccc] hover:text-white border border-[#2a2a2a] text-xs font-semibold transition-colors cursor-pointer"
+                          className="px-3.5 py-1.5 rounded-lg bg-[#181818] hover:bg-[#222222] text-[#cccccc] hover:text-white border border-[#2a2a2a] text-xs font-semibold transition-colors cursor-pointer"
                         >
                           Dossier
                         </button>

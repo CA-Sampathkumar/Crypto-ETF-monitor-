@@ -9,7 +9,9 @@ import { IssuersLeaderboardView } from "./components/IssuersLeaderboardView";
 import { TradingChartsView } from "./components/TradingChartsView";
 import { NewsFeedView } from "./components/NewsFeedView";
 import { ApplicationProcessChartMap } from "./components/ApplicationProcessChartMap";
-import { AiFilingAnalyst } from "./components/AiFilingAnalyst";
+import { TokenCustodySupplyLockView } from "./components/TokenCustodySupplyLockView";
+import { TokensMapStatusChartView } from "./components/TokensMapStatusChartView";
+import { IssuerWalletsUntappedPipelineView } from "./components/IssuerWalletsUntappedPipelineView";
 import { EtfDetailModal } from "./components/EtfDetailModal";
 import { OnlineTrackerModal } from "./components/OnlineTrackerModal";
 import { ApkDownloadModal } from "./components/ApkDownloadModal";
@@ -21,7 +23,7 @@ import { syncNewsAndFilings } from "./services/newsSyncService";
 import { performOnlineTrackerScan } from "./services/onlineTrackerSyncService";
 import { fetchLiveSecEdgarActivities } from "./services/secLiveActivityService";
 import { ETFApplication, OnlineSyncLog, DailyActivityItem, AppNotification } from "./types";
-import { Download, FileSpreadsheet, Sparkles, ExternalLink, ShieldCheck, BellRing, BarChart3, Newspaper, Zap, CheckCircle2, X, Radio, RefreshCw, CalendarCheck2 } from "lucide-react";
+import { Download, FileSpreadsheet, ExternalLink, ShieldCheck, BellRing, BarChart3, Newspaper, Zap, CheckCircle2, X, Radio, RefreshCw, CalendarCheck2 } from "lucide-react";
 
 export default function App() {
   const [applications, setApplications] = useState<ETFApplication[]>(() => {
@@ -78,7 +80,6 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<string>("today");
   const [selectedEtf, setSelectedEtf] = useState<ETFApplication | null>(null);
-  const [targetAiEtf, setTargetAiEtf] = useState<ETFApplication | null>(null);
   const [isOnlineTrackerModalOpen, setIsOnlineTrackerModalOpen] = useState(false);
   const [isApkModalOpen, setIsApkModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -306,11 +307,6 @@ export default function App() {
     setSelectedEtf(app);
   };
 
-  const handleAnalyzeAi = (app: ETFApplication) => {
-    setTargetAiEtf(app);
-    setActiveTab("ai-analyst");
-  };
-
   const handleAddApplication = (newApp: ETFApplication) => {
     setApplications((prev) => [newApp, ...prev]);
     // Also create activity item and notification
@@ -489,7 +485,6 @@ export default function App() {
             activities={activities}
             applications={applications}
             onSelectEtf={handleSelectEtf}
-            onAnalyzeAi={handleAnalyzeAi}
             onAddApplicationDirectly={handleAddApplication}
             onSelectEtfByTicker={handleSelectEtfByTicker}
             onSyncLiveSec={handleSyncSecLive}
@@ -526,7 +521,6 @@ export default function App() {
             <EtfTable
               applications={applications}
               onSelectEtf={handleSelectEtf}
-              onAnalyzeAi={handleAnalyzeAi}
               watchlistIds={watchlistIds}
               onToggleWatchlist={toggleWatchlist}
             />
@@ -536,6 +530,29 @@ export default function App() {
         {activeTab === "charts" && (
           <TradingChartsView
             applications={applications}
+          />
+        )}
+
+        {activeTab === "custody-lock" && (
+          <TokenCustodySupplyLockView
+            applications={applications}
+            onSelectEtfBySymbol={handleSelectEtfByTicker}
+          />
+        )}
+
+        {activeTab === "tokens-map" && (
+          <TokensMapStatusChartView
+            applications={applications}
+            onSelectEtf={handleSelectEtf}
+            onSelectEtfBySymbol={handleSelectEtfByTicker}
+          />
+        )}
+
+        {activeTab === "issuer-wallets" && (
+          <IssuerWalletsUntappedPipelineView
+            applications={applications}
+            onAddApplicationDirectly={handleAddApplication}
+            onSelectEtfBySymbol={handleSelectEtfByTicker}
           />
         )}
 
@@ -568,7 +585,6 @@ export default function App() {
           <TimelineDeadlinesView
             applications={applications}
             onSelectEtf={handleSelectEtf}
-            onAnalyzeAi={handleAnalyzeAi}
           />
         )}
 
@@ -576,13 +592,6 @@ export default function App() {
           <IssuersLeaderboardView
             applications={applications}
             onSelectEtf={handleSelectEtf}
-          />
-        )}
-
-        {activeTab === "ai-analyst" && (
-          <AiFilingAnalyst
-            applications={applications}
-            selectedApplication={targetAiEtf}
           />
         )}
       </main>
@@ -614,7 +623,6 @@ export default function App() {
         <EtfDetailModal
           application={selectedEtf}
           onClose={() => setSelectedEtf(null)}
-          onAnalyzeAi={handleAnalyzeAi}
           isStarred={watchlistIds.has(selectedEtf.id)}
           onToggleWatchlist={toggleWatchlist}
         />

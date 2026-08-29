@@ -179,6 +179,21 @@ export const CHART_PRODUCTS: ProductChartConfig[] = [
       { date: "2026-04-10", title: "Bitwise Amends S-1 with Anchorage Custody & Staking Terms", type: "amendment" },
     ],
   },
+  {
+    symbol: "ONDO",
+    name: "Ondo Finance (Grayscale RWA & Arkham Entity)",
+    ticker: "GONDO / ONDO",
+    isEtf: false,
+    basePrice: 0.3646,
+    volatility: 0.042,
+    inflowBaselineMillion: 15,
+    milestones: [
+      { date: "2024-05-20", title: "Grayscale RWA Fund Adds ONDO to Institutional Basket", type: "benchmark" },
+      { date: "2024-09-15", title: "BlackRock BUIDL Direct Redemption Integration", type: "benchmark" },
+      { date: "2025-01-25", title: "Arkham Verifies Grayscale ONDO On-Chain Cold Vault", type: "filing" },
+      { date: "2026-06-12", title: "Grayscale Prepares Single-Asset ONDO Trust Filing", type: "amendment" },
+    ],
+  },
 ];
 
 /**
