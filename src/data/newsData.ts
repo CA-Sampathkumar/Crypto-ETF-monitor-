@@ -4,16 +4,18 @@ export interface NewsItem {
   summary: string;
   content: string;
   source: string;
-  sourceType: "SEC EDGAR" | "Bloomberg ETF" | "CoinDesk" | "CoinTelegraph" | "Reuters" | "Issuer Release" | "Federal Register";
+  sourceType: "SEC EDGAR" | "Bloomberg ETF" | "CoinDesk" | "CoinTelegraph" | "Reuters" | "Issuer Release" | "Federal Register" | "Live Crypto Media" | string;
   sourceUrl: string;
+  imageUrl?: string;
   publishedAt: string;
   timeAgo: string;
   impactLevel: "HIGH" | "MEDIUM" | "LOW";
-  category: "SEC Regulatory" | "ETF Inflows & Volume" | "Staking Amendments" | "CME & CFTC" | "Legal & Court" | "Exchange Listing";
+  category: "SEC Regulatory" | "ETF Inflows & Volume" | "Staking Amendments" | "CME & CFTC" | "Legal & Court" | "Exchange Listing" | string;
   relatedTokens: string[];
   relatedTickers?: string[];
   author?: string;
   keyTakeaway: string;
+  isLiveStreamed?: boolean;
 }
 
 const todayIso = new Date().toISOString();
@@ -27,6 +29,7 @@ export const INITIAL_NEWS_ITEMS: NewsItem[] = [
     source: "SEC EDGAR / Bloomberg ETF",
     sourceType: "SEC EDGAR",
     sourceUrl: "https://www.sec.gov/edgar/browse/?CIK=0002041235",
+    imageUrl: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=600&auto=format&fit=crop&q=80",
     publishedAt: todayIso,
     timeAgo: "25 mins ago",
     impactLevel: "HIGH",
@@ -44,6 +47,7 @@ export const INITIAL_NEWS_ITEMS: NewsItem[] = [
     source: "SEC EDGAR / NYSE Regulation",
     sourceType: "SEC EDGAR",
     sourceUrl: "https://www.sec.gov/edgar/browse/?CIK=0002043589",
+    imageUrl: "https://images.unsplash.com/photo-1622979135225-d2ba269bc1df?w=600&auto=format&fit=crop&q=80",
     publishedAt: todayIso,
     timeAgo: "45 mins ago",
     impactLevel: "HIGH",
@@ -61,6 +65,7 @@ export const INITIAL_NEWS_ITEMS: NewsItem[] = [
     source: "SEC EDGAR / Bloomberg ETF",
     sourceType: "SEC EDGAR",
     sourceUrl: "https://www.sec.gov/edgar/browse/?CIK=0002049870",
+    imageUrl: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&auto=format&fit=crop&q=80",
     publishedAt: todayIso,
     timeAgo: "1 hour ago",
     impactLevel: "HIGH",
@@ -78,6 +83,7 @@ export const INITIAL_NEWS_ITEMS: NewsItem[] = [
     source: "SEC EDGAR",
     sourceType: "SEC EDGAR",
     sourceUrl: "https://www.sec.gov/edgar/browse/?CIK=0002045120",
+    imageUrl: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=600&auto=format&fit=crop&q=80",
     publishedAt: todayIso,
     timeAgo: "2 hours ago",
     impactLevel: "HIGH",
@@ -95,6 +101,7 @@ export const INITIAL_NEWS_ITEMS: NewsItem[] = [
     source: "SEC EDGAR",
     sourceType: "SEC EDGAR",
     sourceUrl: "https://www.sec.gov/edgar/browse/?CIK=0002047890",
+    imageUrl: "https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=600&auto=format&fit=crop&q=80",
     publishedAt: todayIso,
     timeAgo: "3 hours ago",
     impactLevel: "HIGH",
@@ -111,7 +118,8 @@ export const INITIAL_NEWS_ITEMS: NewsItem[] = [
     content: "The Securities and Exchange Commission has formally published notice of proposed rule changes submitted by Cboe BZX Exchange to list and trade shares of spot Solana exchange-traded funds. This formal publication in the Federal Register activates the statutory 240-day review period under Section 19(b)(2) of the Securities Exchange Act of 1934. Bloomberg ETF analysts James Seyffart and Eric Balchunas note this marks the first official regulatory hurdle cleared for spot Solana vehicles.",
     source: "SEC EDGAR / Federal Register",
     sourceType: "Federal Register",
-    sourceUrl: "https://www.sec.gov/rules/sro/cboebzx.htm",
+    sourceUrl: "https://www.sec.gov/edgar/search/#/q=Solana%20ETF",
+    imageUrl: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&auto=format&fit=crop&q=80",
     publishedAt: todayIso,
     timeAgo: "4 hours ago",
     impactLevel: "HIGH",
@@ -126,9 +134,10 @@ export const INITIAL_NEWS_ITEMS: NewsItem[] = [
     title: "BlackRock iShares Bitcoin Trust (IBIT) Crosses $54 Billion in Custody Assets",
     summary: "IBIT records $620M in daily institutional net inflows as Coinbase Custody expands cold vault capacity.",
     content: "BlackRock's iShares Bitcoin Trust (IBIT) continues its record run on Nasdaq, absorbing $620 million in daily institutional volume. Custodied entirely by Coinbase Custody in 100% segregated cold storage, IBIT's reserve now holds over 535,000 BTC. Institutional disclosures reveal expanded allocations from major state pension funds and European wealth managers.",
-    source: "Bloomberg Intelligence",
-    sourceType: "Bloomberg ETF",
-    sourceUrl: "https://www.bloomberg.com/crypto",
+    source: "SEC EDGAR / iShares",
+    sourceType: "SEC EDGAR",
+    sourceUrl: "https://www.sec.gov/edgar/browse/?CIK=0001980994",
+    imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&auto=format&fit=crop&q=80",
     publishedAt: todayIso,
     timeAgo: "5 hours ago",
     impactLevel: "HIGH",
@@ -145,7 +154,8 @@ export const INITIAL_NEWS_ITEMS: NewsItem[] = [
     content: "Bitwise Asset Management and Canary Capital have submitted Form S-1/A amendment filings with the SEC for their proposed spot XRP ETFs. The amended prospectuses clarify that the trusts will hold raw XRP in segregated accounts and cite the Southern District of New York ruling establishing XRP secondary market programmatic sales as non-securities. The filings also establish primary surveillance relationships with the CME CF XRP-Dollar Reference Rate.",
     source: "SEC EDGAR",
     sourceType: "SEC EDGAR",
-    sourceUrl: "https://www.sec.gov/edgar/searchedgar/companysearch",
+    sourceUrl: "https://www.sec.gov/edgar/search/#/q=XRP%20ETF",
+    imageUrl: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=600&auto=format&fit=crop&q=80",
     publishedAt: todayIso,
     timeAgo: "6 hours ago",
     impactLevel: "HIGH",
@@ -160,9 +170,10 @@ export const INITIAL_NEWS_ITEMS: NewsItem[] = [
     title: "Fidelity and 21Shares Submit Staking Addendums for US Spot Ethereum ETFs (FETH & CETH)",
     summary: "Proposals outline institutional validator staking structures with 3.2% estimated annual yield passed through to share holders without liquidity lockup risk.",
     content: "In a major regulatory push, Fidelity Investments and 21Shares have filed amendments to incorporate native Proof-of-Stake validator rewards into their live spot Ethereum ETFs (FETH and CETH). The proposed structure utilizes qualified staking providers, maintaining a 10% liquid buffer to ensure daily redemption liquidity while distributing staking yields as quarterly cash or in-kind distributions to ETF shareholders.",
-    source: "Reuters Financial",
-    sourceType: "Reuters",
-    sourceUrl: "https://www.reuters.com/technology",
+    source: "SEC EDGAR",
+    sourceType: "SEC EDGAR",
+    sourceUrl: "https://www.sec.gov/edgar/browse/?CIK=0001999338",
+    imageUrl: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&auto=format&fit=crop&q=80",
     publishedAt: todayIso,
     timeAgo: "7 hours ago",
     impactLevel: "HIGH",
@@ -177,9 +188,10 @@ export const INITIAL_NEWS_ITEMS: NewsItem[] = [
     title: "CFTC Designates Litecoin and Dogecoin as Decentralized PoW Commodities, Clearing Key SEC Roadblock",
     summary: "Regulatory certification underscores Proof-of-Work consensus assets carry zero Howey test investment contract liability.",
     content: "In regulatory filings and certified derivatives contracts on Coinbase Derivatives Exchange, the Commodity Futures Trading Commission (CFTC) reiterated that Proof-of-Work digital assets including Litecoin (LTC), Dogecoin (DOGE), and Bitcoin Cash (BCH) are classified as non-security commodities. This regulatory clarity grants pending spot Litecoin ETF filings from Canary Capital an estimated 91%+ probability of approval.",
-    source: "Federal Register / CFTC",
+    source: "CFTC / Federal Register",
     sourceType: "Federal Register",
-    sourceUrl: "https://www.cftc.gov",
+    sourceUrl: "https://www.cftc.gov/PressRoom/PressReleases",
+    imageUrl: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&auto=format&fit=crop&q=80",
     publishedAt: todayIso,
     timeAgo: "8 hours ago",
     impactLevel: "HIGH",

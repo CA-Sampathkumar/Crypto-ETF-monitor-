@@ -8,31 +8,32 @@ interface KpiStatsProps {
   onFilterToken?: (symbol: string) => void;
 }
 
-export const KpiStats: React.FC<KpiStatsProps> = ({ applications }) => {
-  const totalFilings = applications.length;
-  const approvedCount = applications.filter((a) => a.status === "Approved & Trading").length;
-  const pendingCount = applications.filter((a) => a.status !== "Approved & Trading").length;
+export const KpiStats: React.FC<KpiStatsProps> = ({ applications = [] }) => {
+  const safeApps = Array.isArray(applications) ? applications : [];
+  const totalFilings = safeApps.length;
+  const approvedCount = safeApps.filter((a) => a && a.status === "Approved & Trading").length;
+  const pendingCount = safeApps.filter((a) => a && a.status !== "Approved & Trading").length;
 
-  const totalReservesUsd = applications.reduce((acc, a) => acc + a.portfolioValueUsd, 0);
-  const pendingReservesUsd = applications
-    .filter((a) => a.status !== "Approved & Trading")
-    .reduce((acc, a) => acc + a.portfolioValueUsd, 0);
+  const totalReservesUsd = safeApps.reduce((acc, a) => acc + (a?.portfolioValueUsd || 0), 0);
+  const pendingReservesUsd = safeApps
+    .filter((a) => a && a.status !== "Approved & Trading")
+    .reduce((acc, a) => acc + (a?.portfolioValueUsd || 0), 0);
 
   // Find next nearest deadline among pending applications
-  const pendingWithDeadlines = applications
-    .filter((a) => a.status !== "Approved & Trading" && a.statutoryDeadlines.daysRemaining >= 0)
+  const pendingWithDeadlines = safeApps
+    .filter((a) => a && a.status !== "Approved & Trading" && a?.statutoryDeadlines && a.statutoryDeadlines.daysRemaining >= 0)
     .sort((a, b) => a.statutoryDeadlines.daysRemaining - b.statutoryDeadlines.daysRemaining);
 
   const nextDeadlineApp = pendingWithDeadlines[0];
 
   // Average approval odds of pending
-  const pendingOdds = applications.filter((a) => a.status !== "Approved & Trading");
+  const pendingOdds = safeApps.filter((a) => a && a.status !== "Approved & Trading");
   const avgApprovalOdds = pendingOdds.length > 0
-    ? Math.round(pendingOdds.reduce((sum, a) => sum + a.approvalProbabilityPercentage, 0) / pendingOdds.length)
+    ? Math.round(pendingOdds.reduce((sum, a) => sum + (a?.approvalProbabilityPercentage || 0), 0) / pendingOdds.length)
     : 0;
 
   // Staking enabled applications count
-  const stakingCount = applications.filter((a) => a.stakingEnabled).length;
+  const stakingCount = safeApps.filter((a) => a && a.stakingEnabled).length;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

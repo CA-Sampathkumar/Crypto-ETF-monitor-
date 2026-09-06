@@ -390,6 +390,90 @@ export interface NewsSyncResult {
 }
 
 /**
+ * Fetches real-time live Crypto ETF and regulatory news with authentic article URLs
+ */
+export async function fetchLiveCryptoNews(): Promise<NewsItem[]> {
+  try {
+    const res = await fetch("/api/news/live");
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.news) && data.news.length > 0) {
+        return data.news;
+      }
+    }
+  } catch (err) {
+    console.warn("Backend /api/news/live notice, attempting direct public feed fallback:", err);
+  }
+
+  // Fallback to direct client-side CryptoCompare public API
+  try {
+    const ccRes = await fetch("https://min-api.cryptocompare.com/data/v2/news/?lang=EN");
+    if (ccRes.ok) {
+      const ccData = await ccRes.json();
+      if (Array.isArray(ccData?.Data)) {
+        const liveDirect: NewsItem[] = ccData.Data.slice(0, 30).map((art: any) => {
+          const directUrl = art.url || art.guid;
+          const body = art.body || "";
+          const fullText = `${art.title} ${body} ${art.tags || ""}`.toLowerCase();
+
+          const tokensFound: string[] = [];
+          if (/bitcoin|\bbtc\b/.test(fullText)) tokensFound.push("BTC");
+          if (/ethereum|\beth\b|ether\b/.test(fullText)) tokensFound.push("ETH");
+          if (/solana|\bsol\b/.test(fullText)) tokensFound.push("SOL");
+          if (/ripple|\bxrp\b/.test(fullText)) tokensFound.push("XRP");
+          if (/litecoin|\bltc\b/.test(fullText)) tokensFound.push("LTC");
+          if (/dogecoin|\bdoge\b/.test(fullText)) tokensFound.push("DOGE");
+          if (/sui\b/.test(fullText)) tokensFound.push("SUI");
+          if (/cardano|\bada\b/.test(fullText)) tokensFound.push("ADA");
+          if (/hyperliquid|\bhype\b/.test(fullText)) tokensFound.push("HYPE");
+          if (tokensFound.length === 0) tokensFound.push("CRYPTO");
+
+          const publishedTimestamp = art.published_on ? art.published_on * 1000 : Date.now();
+          const diffMinutes = Math.max(1, Math.round((Date.now() - publishedTimestamp) / (60 * 1000)));
+          let timeAgoStr = `${diffMinutes} mins ago`;
+          if (diffMinutes >= 60) {
+            const hours = Math.floor(diffMinutes / 60);
+            timeAgoStr = hours === 1 ? "1 hour ago" : `${hours} hours ago`;
+          }
+
+          let category = "ETF Inflows & Volume";
+          if (/sec\b|regulat|filing|19b-4|s-1|approval/i.test(fullText)) category = "SEC Regulatory";
+          else if (/staking|yield|validator/i.test(fullText)) category = "Staking Amendments";
+          else if (/cftc|cme|futures|commodity/i.test(fullText)) category = "CME & CFTC";
+          else if (/listing|nasdaq|nyse|cboe/i.test(fullText)) category = "Exchange Listing";
+
+          return {
+            id: `direct-cc-${art.id}`,
+            title: art.title,
+            summary: body.length > 220 ? `${body.substring(0, 220)}...` : body,
+            content: body,
+            source: art.source_info?.name || art.source || "Crypto Wire",
+            sourceType: "Live Crypto Media",
+            sourceUrl: directUrl,
+            imageUrl: art.imageurl,
+            publishedAt: new Date(publishedTimestamp).toISOString(),
+            timeAgo: timeAgoStr,
+            impactLevel: /etf|sec|approve|filing|record/i.test(fullText) ? "HIGH" : "MEDIUM",
+            category,
+            relatedTokens: tokensFound,
+            author: art.source_info?.name || "News Wire",
+            keyTakeaway: art.title,
+            isLiveStreamed: true,
+          };
+        });
+
+        // Merge with initial verified SEC EDGAR filings
+        return [...liveDirect, ...INITIAL_NEWS_ITEMS];
+      }
+    }
+  } catch (directErr) {
+    console.warn("Direct CryptoCompare fallback error:", directErr);
+  }
+
+  return INITIAL_NEWS_ITEMS;
+}
+
+/**
  * Scans all active news items, compares them against the existing ETF database,
  * and automatically injects missing spot ETF applications with real live pricing.
  */

@@ -13,6 +13,7 @@ import { TokenCustodySupplyLockView } from "./components/TokenCustodySupplyLockV
 import { TokensMapStatusChartView } from "./components/TokensMapStatusChartView";
 import { TokensPriceMonitorView } from "./components/TokensPriceMonitorView";
 import { IssuerWalletsUntappedPipelineView } from "./components/IssuerWalletsUntappedPipelineView";
+import { BtcDerivativesOpenInterestView } from "./components/BtcDerivativesOpenInterestView";
 import { EtfDetailModal } from "./components/EtfDetailModal";
 import { OnlineTrackerModal } from "./components/OnlineTrackerModal";
 import { INITIAL_ETF_APPLICATIONS } from "./data/etfData";
@@ -354,12 +355,12 @@ export default function App() {
       tokensCount: newApp.tokensHeld,
       sponsorFeePercentage: newApp.sponsorFeePercentage,
       custodian: newApp.custodian.name,
-      secCik: newApp.secEdgar.cik,
-      secAccession: newApp.secEdgar.accessionNumber,
-      officialFilingUrl: newApp.secEdgar.officialUrl,
+      secCik: newApp.secEdgar?.cik,
+      secAccession: newApp.secEdgar?.accessionNumber,
+      officialFilingUrl: newApp.secEdgar?.officialUrl,
       impactLevel: "HIGH",
       status: newApp.status,
-      etfApplicationId: newApp.id,
+      reasonOrCatalyst: "Automated SEC EDGAR registration disclosure",
     };
     setActivities((prev) => [newAct, ...prev]);
 
@@ -380,6 +381,16 @@ export default function App() {
     setNotifications((prev) => [notif, ...prev]);
     notificationAudio.playChime(newApp.status === "Approved & Trading" ? "APPROVAL" : "FILING");
   };
+
+  const handleUpdateApplicationsBatch = useCallback((newApps: ETFApplication[]) => {
+    if (!newApps || newApps.length === 0) return;
+    setApplications((prev) => {
+      const existingIds = new Set(prev.map((a) => a.id));
+      const filtered = newApps.filter((a) => !existingIds.has(a.id));
+      if (filtered.length === 0) return prev;
+      return [...filtered, ...prev];
+    });
+  }, []);
 
   // Export to CSV
   const handleExportCsv = () => {
@@ -578,6 +589,14 @@ export default function App() {
           />
         )}
 
+        {/* BTC Open Interest, Long/Short Dynamics & Spot ETF Flow Parallel Matrix */}
+        {activeTab === "derivatives" && (
+          <BtcDerivativesOpenInterestView
+            applications={applications}
+            onSelectEtfByTicker={handleSelectEtfByTicker}
+          />
+        )}
+
         {activeTab === "tokens-map" && (
           <TokensMapStatusChartView
             applications={applications}
@@ -630,6 +649,9 @@ export default function App() {
           <IssuersLeaderboardView
             applications={applications}
             onSelectEtf={handleSelectEtf}
+            onAddApplicationDirectly={handleAddApplication}
+            onSelectEtfByTicker={handleSelectEtfByTicker}
+            onUpdateApplicationsBatch={handleUpdateApplicationsBatch}
           />
         )}
       </main>

@@ -224,9 +224,9 @@ export const TradingChartsView: React.FC<TradingChartsViewProps> = ({
 
         {/* Product Chips Selector */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-          {CHART_PRODUCTS.map((prod) => (
+          {CHART_PRODUCTS.map((prod, prodIdx) => (
             <button
-              key={prod.symbol}
+              key={`chart-prod-${prod.symbol}-${prod.ticker || prodIdx}`}
               onClick={() => setSelectedSymbol(prod.symbol)}
               className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedSymbol === prod.symbol

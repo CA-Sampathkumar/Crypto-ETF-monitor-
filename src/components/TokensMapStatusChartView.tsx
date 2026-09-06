@@ -658,14 +658,14 @@ export const TokensMapStatusChartView: React.FC<TokensMapStatusChartViewProps> =
 
       {/* Interactive Visual Token Map Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredTokens.map((token) => {
+        {filteredTokens.map((token, tokenIdx) => {
           const isApproved = token.statusCategory === "APPROVED";
           const isPending = token.statusCategory === "PENDING_240D";
           const isApplied = token.statusCategory === "APPLIED_S1";
 
           return (
             <div
-              key={token.symbol}
+              key={`token-map-${token.symbol}-${tokenIdx}`}
               id={`token-map-card-${token.symbol}`}
               onClick={() => setSelectedTokenDetail(token)}
               className="bg-[#0d0d0d] hover:bg-[#121212] border border-[#1e1e1e] hover:border-[#2f2f2f] rounded-2xl p-4.5 transition-all cursor-pointer flex flex-col justify-between space-y-3.5 shadow-sm group"

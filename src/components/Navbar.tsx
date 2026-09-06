@@ -13,6 +13,7 @@ import {
   CalendarCheck2,
   Zap,
   Coins,
+  Flame,
 } from "lucide-react";
 import { ETFApplication, AppNotification } from "../types";
 import { NotificationCenter } from "./NotificationCenter";
@@ -206,7 +207,24 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </button>
 
-            {/* 3. Filing Directory */}
+            {/* 3. Open Interest, Long/Short & "Don't Miss" Squeeze Radar (All Tokens Free Live) */}
+            <button
+              id="tab-derivatives"
+              onClick={() => setActiveTab("derivatives")}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === "derivatives"
+                  ? "bg-orange-950/90 text-orange-200 border border-orange-500/50 shadow-md font-bold"
+                  : "text-orange-400 hover:text-orange-200 hover:bg-orange-950/40"
+              }`}
+            >
+              <Flame className="w-3.5 h-3.5 text-orange-400 animate-pulse" />
+              <span>OI &amp; &quot;Don&apos;t Miss&quot; Radar</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-orange-500 text-black">
+                ALL TOKENS &bull; FREE
+              </span>
+            </button>
+
+            {/* 4. Filing Directory */}
             <button
               id="tab-filings"
               onClick={() => setActiveTab("filings")}

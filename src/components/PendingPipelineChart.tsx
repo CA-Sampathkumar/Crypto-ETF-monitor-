@@ -26,21 +26,23 @@ interface PendingPipelineChartProps {
 }
 
 export const PendingPipelineChart: React.FC<PendingPipelineChartProps> = ({
-  applications,
+  applications = [],
   onSelectTokenFilter,
   onSelectStatusFilter,
   onSelectEtf,
 }) => {
   const [activeChartView, setActiveChartView] = useState<"probability" | "process-map" | "funnel" | "deadlines">("probability");
 
+  const safeApps = useMemo(() => (Array.isArray(applications) ? applications : []), [applications]);
+
   // Filter only pending applications (not yet approved & live)
   const pendingApps = useMemo(() => {
-    return applications.filter((a) => a.status !== "Approved & Trading");
-  }, [applications]);
+    return safeApps.filter((a) => a && a.status !== "Approved & Trading");
+  }, [safeApps]);
 
   const approvedApps = useMemo(() => {
-    return applications.filter((a) => a.status === "Approved & Trading");
-  }, [applications]);
+    return safeApps.filter((a) => a && a.status === "Approved & Trading");
+  }, [safeApps]);
 
   // Aggregate stats
   const stats = useMemo(() => {
@@ -92,11 +94,12 @@ export const PendingPipelineChart: React.FC<PendingPipelineChartProps> = ({
 
   // Group pending applications by statutory pipeline stage
   const pipelineFunnel = useMemo(() => {
-    const s1Filed = applications.filter((a) => a.status === "S-1 Registration Filed" || a.status === "S-1 Amendment Filed");
-    const pending19b4 = applications.filter((a) => a.status === "19b-4 Pending Review");
-    const staffReview = applications.filter((a) => a.status === "Staff Review Stage" || a.status === "Public Comments Period");
-    const finalDecision = applications.filter((a) => a.statutoryDeadlines.daysRemaining <= 45 && a.status !== "Approved & Trading");
-    const liveApproved = applications.filter((a) => a.status === "Approved & Trading");
+    const totalCount = safeApps.length || 1;
+    const s1Filed = safeApps.filter((a) => a && (a.status === "S-1 Registration Filed" || a.status === "S-1 Amendment Filed"));
+    const pending19b4 = safeApps.filter((a) => a && a.status === "19b-4 Pending Review");
+    const staffReview = safeApps.filter((a) => a && (a.status === "Staff Review Stage" || a.status === "Public Comments Period"));
+    const finalDecision = safeApps.filter((a) => a && a.statutoryDeadlines && a.statutoryDeadlines.daysRemaining <= 45 && a.status !== "Approved & Trading");
+    const liveApproved = safeApps.filter((a) => a && a.status === "Approved & Trading");
 
     return [
       {
@@ -106,7 +109,7 @@ export const PendingPipelineChart: React.FC<PendingPipelineChartProps> = ({
         desc: "Initial registration of trust shares under Securities Act of 1933",
         color: "from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/30",
         barColor: "bg-amber-500",
-        percentage: Math.round((s1Filed.length / applications.length) * 100),
+        percentage: Math.round((s1Filed.length / totalCount) * 100),
       },
       {
         stage: "19b-4 Pending Review",
@@ -115,7 +118,7 @@ export const PendingPipelineChart: React.FC<PendingPipelineChartProps> = ({
         desc: "Exchange rule change filed with Cboe BZX, Nasdaq, or NYSE Arca",
         color: "from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/30",
         barColor: "bg-blue-500",
-        percentage: Math.round((pending19b4.length / applications.length) * 100),
+        percentage: Math.round((pending19b4.length / totalCount) * 100),
       },
       {
         stage: "Staff Review Stage",
@@ -124,7 +127,7 @@ export const PendingPipelineChart: React.FC<PendingPipelineChartProps> = ({
         desc: "SEC Division of Trading & Markets comment letters and S-1/A addendums",
         color: "from-purple-500/20 to-purple-500/5 text-purple-400 border-purple-500/30",
         barColor: "bg-purple-500",
-        percentage: Math.round(((staffReview.length + 3) / applications.length) * 100),
+        percentage: Math.round(((staffReview.length + 3) / totalCount) * 100),
       },
       {
         stage: "Final 240d Clock",
@@ -133,7 +136,7 @@ export const PendingPipelineChart: React.FC<PendingPipelineChartProps> = ({
         desc: "Imminent statutory order window (within 45 days of final deadline)",
         color: "from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/30",
         barColor: "bg-rose-500",
-        percentage: Math.round((finalDecision.length / applications.length) * 100),
+        percentage: Math.round((finalDecision.length / totalCount) * 100),
       },
       {
         stage: "Approved & Trading",
@@ -142,10 +145,10 @@ export const PendingPipelineChart: React.FC<PendingPipelineChartProps> = ({
         desc: "Order granting accelerated approval and effectiveness for trading",
         color: "from-emerald-500/20 to-emerald-500/5 text-emerald-400 border-emerald-500/30",
         barColor: "bg-emerald-500",
-        percentage: Math.round((liveApproved.length / applications.length) * 100),
+        percentage: Math.round((liveApproved.length / totalCount) * 100),
       },
     ];
-  }, [applications]);
+  }, [safeApps]);
 
   // Group pending applications by statutory deadline calendar buckets
   const deadlineBuckets = useMemo(() => {

@@ -88,7 +88,7 @@ const CATEGORIES: TokenCategory[] = [
 
 export const TokensPriceMonitorView: React.FC<TokensPriceMonitorViewProps> = ({
   livePrices,
-  applications,
+  applications = [],
   onSelectEtf,
   onRefreshLivePrices,
   isRefreshing,
@@ -97,6 +97,7 @@ export const TokensPriceMonitorView: React.FC<TokensPriceMonitorViewProps> = ({
   onToggleAutoRefresh,
   onSelectEtfByTicker,
 }) => {
+  const safeApps = useMemo(() => (Array.isArray(applications) ? applications : []), [applications]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<TokenCategory>("All");
   const [performanceFilter, setPerformanceFilter] = useState<"ALL" | "GAINERS" | "TOP_GAINERS" | "LOSERS">("ALL");
@@ -348,9 +349,9 @@ export const TokensPriceMonitorView: React.FC<TokensPriceMonitorViewProps> = ({
       }
 
       // Check linked ETF applications from database
-      const matchingEtfs = applications.filter((app) => app.tokenSymbol.toUpperCase() === token.symbol.toUpperCase());
-      const approvedCount = matchingEtfs.filter((a) => a.status === "Approved & Trading").length;
-      const pendingCount = matchingEtfs.filter((a) => a.status !== "Approved & Trading").length;
+      const matchingEtfs = safeApps.filter((app) => app && app.tokenSymbol && app.tokenSymbol.toUpperCase() === token.symbol.toUpperCase());
+      const approvedCount = matchingEtfs.filter((a) => a && a.status === "Approved & Trading").length;
+      const pendingCount = matchingEtfs.filter((a) => a && a.status !== "Approved & Trading").length;
 
       let computedEtfStatus = token.etfStatus;
       if (approvedCount > 0) {
@@ -665,9 +666,9 @@ export const TokensPriceMonitorView: React.FC<TokensPriceMonitorViewProps> = ({
               <div>
                 <span className="text-[11px] font-medium text-[#8e8e99] block">Trending High Velocity</span>
                 <div className="flex items-center gap-2 mt-0.5">
-                  {globalMetrics.trendingTokens.map((tok) => (
+                  {globalMetrics.trendingTokens.map((tok, idx) => (
                     <button
-                      key={tok.symbol}
+                      key={`trending-${tok.symbol}-${idx}`}
                       onClick={() => setSelectedToken(tok)}
                       className="text-xs font-bold text-white hover:text-emerald-400 flex items-center gap-1 cursor-pointer transition-colors"
                     >
@@ -932,7 +933,7 @@ export const TokensPriceMonitorView: React.FC<TokensPriceMonitorViewProps> = ({
                     : "overflow-x-auto scrollbar-thin scrollbar-thumb-[#242436]"
                 }`}
               >
-                {chartTokensList.map((tok) => {
+                {chartTokensList.map((tok, idx) => {
                   const isSelected = activeChartSymbol.toUpperCase() === tok.symbol.toUpperCase();
                   const live = livePrices[tok.symbol.toUpperCase()];
                   const change = live ? live.change24h : tok.change24h;
@@ -940,7 +941,7 @@ export const TokensPriceMonitorView: React.FC<TokensPriceMonitorViewProps> = ({
 
                   return (
                     <button
-                      key={tok.symbol}
+                      key={`chart-tab-${tok.symbol}-${idx}`}
                       type="button"
                       onClick={() => setActiveChartSymbol(tok.symbol)}
                       className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs transition-all whitespace-nowrap cursor-pointer shrink-0 ${
@@ -1316,7 +1317,7 @@ export const TokensPriceMonitorView: React.FC<TokensPriceMonitorViewProps> = ({
 
                     return (
                       <tr
-                        key={token.symbol}
+                        key={`tok-row-${token.symbol}-${token.rank}`}
                         onClick={() => setSelectedToken(token)}
                         className={`hover:bg-[#151520]/80 transition-colors cursor-pointer group ${
                           flash === "up" ? "bg-emerald-950/20" : flash === "down" ? "bg-red-950/20" : ""
@@ -1560,7 +1561,7 @@ export const TokensPriceMonitorView: React.FC<TokensPriceMonitorViewProps> = ({
             const isStarred = watchlist.has(token.symbol);
             return (
               <div
-                key={token.symbol}
+                key={`tok-card-${token.symbol}-${token.rank}`}
                 onClick={() => setSelectedToken(token)}
                 className="bg-[#0e0e14] border border-[#1e1e28] hover:border-emerald-500/40 rounded-2xl p-4 transition-all hover:shadow-xl cursor-pointer group flex flex-col justify-between"
               >
@@ -1791,8 +1792,8 @@ export const TokensPriceMonitorView: React.FC<TokensPriceMonitorViewProps> = ({
               {selectedToken.activeIssuers && selectedToken.activeIssuers.length > 0 && (
                 <div className="pt-2 border-t border-[#1c1c28] flex flex-wrap items-center gap-2 text-xs">
                   <span className="text-[#888899]">Active Issuers:</span>
-                  {selectedToken.activeIssuers.map((iss) => (
-                    <span key={iss} className="px-2 py-0.5 rounded-md bg-[#1a1a28] text-white font-medium">
+                  {selectedToken.activeIssuers.map((iss, idx) => (
+                    <span key={`modal-iss-${iss}-${idx}`} className="px-2 py-0.5 rounded-md bg-[#1a1a28] text-white font-medium">
                       {iss}
                     </span>
                   ))}
@@ -1802,9 +1803,9 @@ export const TokensPriceMonitorView: React.FC<TokensPriceMonitorViewProps> = ({
               {selectedToken.activeEtfTickers && selectedToken.activeEtfTickers.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5 text-xs">
                   <span className="text-[#888899]">Associated Tickers:</span>
-                  {selectedToken.activeEtfTickers.map((tick) => (
+                  {selectedToken.activeEtfTickers.map((tick, idx) => (
                     <button
-                      key={tick}
+                      key={`modal-tick-${tick}-${idx}`}
                       onClick={() => {
                         if (onSelectEtfByTicker) {
                           onSelectEtfByTicker(tick);

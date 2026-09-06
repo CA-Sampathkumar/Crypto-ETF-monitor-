@@ -321,6 +321,34 @@ export interface DailyActivitySummary {
   topCustodiansImpacted: { name: string; count: number; valueUsd: number }[];
 }
 
+export interface TopUsEtfIssuer {
+  rank: number;
+  issuerId: string;
+  issuerName: string;
+  parentEntity?: string;
+  totalEtfAumUsd: number;
+  totalEtfAumFormatted: string;
+  cryptoEtfAumUsd: number;
+  cryptoEtfAumFormatted: string;
+  cryptoLaunched: boolean;
+  flagshipCryptoProduct: string;
+  cryptoPercentageOfTotal: number;
+  secCik: string;
+  secEdgarSearchUrl: string;
+  status: "Launched Crypto ETFs" | "No Crypto ETF Launched" | "Active SEC Application Pending";
+  knownCustodyWalletsCount: number;
+  primaryCustodians: string[];
+  masterWalletAddresses: MasterWalletAddress[];
+  supportedTokens: IssuerSupportedToken[];
+  untappedTokensHeldWithoutEtf: string[];
+  trustStructure: string;
+  cashAdministrator: string;
+  lastSecScanTime?: string;
+  secScanStatus?: "Active Filings Synchronized" | "Checked - No Crypto Filings" | "Monitoring Active";
+  activeFilingsCount?: number;
+  activeEtfTickers?: string[];
+}
+
 export type NotificationCategory = "FILING" | "APPROVAL" | "WITHDRAWAL" | "NEWS" | "SYSTEM";
 
 export interface AppNotification {

@@ -43,7 +43,7 @@ interface EtfTableProps {
 }
 
 export const EtfTable: React.FC<EtfTableProps> = ({
-  applications,
+  applications = [],
   onSelectEtf,
   watchlistIds = new Set(),
   onToggleWatchlist,
@@ -64,6 +64,9 @@ export const EtfTable: React.FC<EtfTableProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
+  // Safe applications array
+  const safeApps = useMemo(() => (Array.isArray(applications) ? applications : []), [applications]);
+
   // Reset to page 1 whenever any filter, search, or sort changes
   useEffect(() => {
     setCurrentPage(1);
@@ -72,33 +75,33 @@ export const EtfTable: React.FC<EtfTableProps> = ({
   // Available unique tokens
   const uniqueTokens = useMemo(() => {
     const set = new Set<string>();
-    applications.forEach((a) => set.add(a.tokenSymbol));
+    safeApps.forEach((a) => a && a.tokenSymbol && set.add(a.tokenSymbol));
     return Array.from(set);
-  }, [applications]);
+  }, [safeApps]);
 
   // Available unique issuers
   const uniqueIssuers = useMemo(() => {
     const set = new Set<string>();
-    applications.forEach((a) => set.add(a.issuer));
+    safeApps.forEach((a) => a && a.issuer && set.add(a.issuer));
     return Array.from(set);
-  }, [applications]);
+  }, [safeApps]);
 
   // Counts for market segment tabs
   const marketCounts = useMemo(() => {
-    const liveEtfs = applications.filter((a) => a.status === "Approved & Trading" || a.tradingCategory === "Live Spot ETF").length;
-    const otcTrusts = applications.filter((a) => a.tradingCategory === "Active OTC Trust" || a.issuer.includes("Grayscale") || a.issuer.includes("Bitwise 10")).length;
-    const pendingSec = applications.filter((a) => a.status !== "Approved & Trading").length;
-    const staking = applications.filter((a) => a.stakingEnabled).length;
-    const watchlist = applications.filter((a) => watchlistIds.has(a.id)).length;
+    const liveEtfs = safeApps.filter((a) => a && (a.status === "Approved & Trading" || a.tradingCategory === "Live Spot ETF")).length;
+    const otcTrusts = safeApps.filter((a) => a && (a.tradingCategory === "Active OTC Trust" || (a.issuer && (a.issuer.includes("Grayscale") || a.issuer.includes("Bitwise 10"))))).length;
+    const pendingSec = safeApps.filter((a) => a && a.status !== "Approved & Trading").length;
+    const staking = safeApps.filter((a) => a && a.stakingEnabled).length;
+    const watchlist = safeApps.filter((a) => a && watchlistIds && watchlistIds.has(a.id)).length;
     return {
-      all: applications.length,
+      all: safeApps.length,
       watchlist,
       liveEtfs,
       otcTrusts,
       pendingSec,
       staking,
     };
-  }, [applications, watchlistIds]);
+  }, [safeApps, watchlistIds]);
 
   const handleCopyAccession = (e: React.MouseEvent, accession: string, id: string) => {
     e.stopPropagation();
@@ -108,31 +111,32 @@ export const EtfTable: React.FC<EtfTableProps> = ({
   };
 
   const filteredApplications = useMemo(() => {
-    return applications
+    return safeApps
       .filter((app) => {
+        if (!app) return false;
         // Search
         const query = searchQuery.toLowerCase();
         const matchesSearch =
-          app.fundName.toLowerCase().includes(query) ||
-          app.tokenName.toLowerCase().includes(query) ||
-          app.tokenSymbol.toLowerCase().includes(query) ||
-          app.issuer.toLowerCase().includes(query) ||
-          app.ticker.toLowerCase().includes(query) ||
-          app.secEdgar.accessionNumber.includes(query) ||
-          app.custodian.name.toLowerCase().includes(query);
+          (app.fundName && app.fundName.toLowerCase().includes(query)) ||
+          (app.tokenName && app.tokenName.toLowerCase().includes(query)) ||
+          (app.tokenSymbol && app.tokenSymbol.toLowerCase().includes(query)) ||
+          (app.issuer && app.issuer.toLowerCase().includes(query)) ||
+          (app.ticker && app.ticker.toLowerCase().includes(query)) ||
+          (app.secEdgar && app.secEdgar.accessionNumber && app.secEdgar.accessionNumber.includes(query)) ||
+          (app.custodian && app.custodian.name && app.custodian.name.toLowerCase().includes(query));
 
         // Market Category Filter
         let matchesMarket = true;
         if (marketFilter === "WATCHLIST") {
-          matchesMarket = watchlistIds.has(app.id);
+          matchesMarket = Boolean(watchlistIds && watchlistIds.has(app.id));
         } else if (marketFilter === "LIVE_ETF") {
           matchesMarket = app.status === "Approved & Trading" || app.tradingCategory === "Live Spot ETF";
         } else if (marketFilter === "OTC_TRUST") {
-          matchesMarket = app.tradingCategory === "Active OTC Trust" || app.issuer.includes("Grayscale") || app.ticker.startsWith("G") || app.ticker === "BITW";
+          matchesMarket = app.tradingCategory === "Active OTC Trust" || (app.issuer && app.issuer.includes("Grayscale")) || (app.ticker && (app.ticker.startsWith("G") || app.ticker === "BITW"));
         } else if (marketFilter === "PENDING_SEC") {
           matchesMarket = app.status !== "Approved & Trading";
         } else if (marketFilter === "STAKING") {
-          matchesMarket = app.stakingEnabled;
+          matchesMarket = Boolean(app.stakingEnabled);
         }
 
         // Token filter

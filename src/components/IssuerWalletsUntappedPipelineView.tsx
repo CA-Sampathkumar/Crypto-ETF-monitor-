@@ -524,12 +524,12 @@ export const IssuerWalletsUntappedPipelineView: React.FC<IssuerWalletsUntappedPi
                         if (selectedStatusFilter === "UNTAPPED") return !info.hasActiveEtf;
                         return info.statusType === selectedStatusFilter;
                       })
-                      .map((t) => {
+                      .map((t, tIdx) => {
                         const filingInfo = getTokenFilingStatus(t.symbol, issuer.issuerName);
 
                         return (
                           <div
-                            key={t.symbol}
+                            key={`${issuer.id}-supp-tok-${t.symbol}-${tIdx}`}
                             className="bg-[#121212] p-3 rounded-2xl border border-[#1f1f1f] space-y-2 hover:border-[#2a2a2a] transition-all"
                           >
                             <div className="flex items-center justify-between">
@@ -869,9 +869,9 @@ export const IssuerWalletsUntappedPipelineView: React.FC<IssuerWalletsUntappedPi
 
           {/* Untapped Candidate Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {untappedTokens.map((cand) => (
+            {untappedTokens.map((cand, candIdx) => (
               <div
-                key={cand.symbol}
+                key={`untapped-cand-${cand.symbol}-${cand.id || candIdx}`}
                 className="bg-[#0d0d0d] border border-[#1e1e1e] hover:border-[#2f2f2f] rounded-2xl p-5 flex flex-col justify-between space-y-4 transition-all shadow-sm"
               >
                 <div>

@@ -165,9 +165,9 @@ export const PortfolioHoldingsView: React.FC<PortfolioHoldingsViewProps> = ({
             >
               All Assets
             </button>
-            {tokenSummaries.map((t) => (
+            {tokenSummaries.map((t, idx) => (
               <button
-                key={t.symbol}
+                key={`holdings-tab-${t.symbol}-${idx}`}
                 onClick={() => setSelectedTokenTab(t.symbol)}
                 className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
                   selectedTokenTab === t.symbol
@@ -182,11 +182,11 @@ export const PortfolioHoldingsView: React.FC<PortfolioHoldingsViewProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tokenSummaries.map((t) => {
+          {tokenSummaries.map((t, idx) => {
             const tokenApps = applications.filter((a) => a.tokenSymbol === t.symbol);
             return (
               <div
-                key={t.symbol}
+                key={`holdings-card-${t.symbol}-${idx}`}
                 className="bg-[#0f0f0f] border border-[#1e1e1e] rounded-2xl p-5 hover:border-[#2a2a2a] transition-all flex flex-col justify-between"
               >
                 <div>

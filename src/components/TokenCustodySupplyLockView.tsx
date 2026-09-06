@@ -332,12 +332,12 @@ export const TokenCustodySupplyLockView: React.FC<TokenCustodySupplyLockViewProp
 
       {/* Main Token Custody Table & Cards */}
       <div className="space-y-4">
-        {paginatedData.map((item) => {
+        {paginatedData.map((item, itemIdx) => {
           const totalInsurance = item.custodians.reduce((acc, c) => acc + c.insuranceCoverageMillionUsd, 0);
 
           return (
             <div
-              key={item.tokenSymbol}
+              key={`custody-token-${item.tokenSymbol}-${itemIdx}`}
               id={`custody-token-${item.tokenSymbol}`}
               className="bg-[#0d0d0d] border border-[#1e1e1e] hover:border-[#2a2a2a] rounded-2xl p-5 transition-all space-y-4 shadow-sm"
             >

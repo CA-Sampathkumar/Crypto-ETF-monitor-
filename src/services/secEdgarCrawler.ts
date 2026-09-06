@@ -215,24 +215,48 @@ const ISSUER_DETECTION_RULES: Array<{
   logo: string;
   keywords: string[];
 }> = [
+  { issuer: "Vanguard", logo: "VG", keywords: ["vanguard"] },
   { issuer: "BlackRock / iShares", logo: "BLK", keywords: ["blackrock", "ishares"] },
+  { issuer: "State Street (SPDR)", logo: "ST", keywords: ["state street", "spdr", "ssga"] },
+  { issuer: "Invesco Galaxy", logo: "INV", keywords: ["invesco", "galaxy"] },
+  { issuer: "Charles Schwab", logo: "CS", keywords: ["charles schwab", "schwab"] },
+  { issuer: "JPMorgan", logo: "JPM", keywords: ["jpmorgan", "j.p. morgan", "jp morgan"] },
+  { issuer: "Dimensional (DFA)", logo: "DFA", keywords: ["dimensional", "dfa"] },
+  { issuer: "First Trust", logo: "FT", keywords: ["first trust"] },
+  { issuer: "Capital Group", logo: "CG", keywords: ["capital group", "american funds"] },
+  { issuer: "American Century", logo: "AC", keywords: ["american century"] },
+  { issuer: "VanEck", logo: "VE", keywords: ["vaneck", "van eck"] },
   { issuer: "Fidelity Investments", logo: "FID", keywords: ["fidelity", "wise origin"] },
+  { issuer: "World Gold Council", logo: "WGC", keywords: ["world gold council", "world gold trust"] },
+  { issuer: "ProShares", logo: "PS", keywords: ["proshares", "pro shares"] },
+  { issuer: "WisdomTree", logo: "WT", keywords: ["wisdomtree", "wisdom tree"] },
+  { issuer: "Mirae Asset (Global X)", logo: "GX", keywords: ["global x", "mirae asset"] },
+  { issuer: "Direxion (Rafferty)", logo: "DIR", keywords: ["direxion", "rafferty"] },
+  { issuer: "Goldman Sachs", logo: "GS", keywords: ["goldman sachs", "goldman"] },
+  { issuer: "Allianz Investment Mgmt", logo: "ALZ", keywords: ["allianz", "allianzim"] },
+  { issuer: "Franklin Templeton", logo: "FT", keywords: ["franklin templeton", "franklin"] },
+  { issuer: "Janus Henderson", logo: "JH", keywords: ["janus henderson", "janus"] },
+  { issuer: "Pacer Advisors", logo: "PCR", keywords: ["pacer", "pacer advisors"] },
+  { issuer: "Innovator", logo: "INN", keywords: ["innovator"] },
+  { issuer: "Prudential", logo: "PRU", keywords: ["prudential", "pgim"] },
+  { issuer: "Northern Trust", logo: "NT", keywords: ["northern trust", "flexshares"] },
+  { issuer: "T. Rowe Price", logo: "TRP", keywords: ["t. rowe price", "t rowe price"] },
+  { issuer: "Victory Capital", logo: "VIC", keywords: ["victory capital"] },
+  { issuer: "DWS (Xtrackers)", logo: "DWS", keywords: ["dws", "xtrackers", "dbx"] },
+  { issuer: "SS&C Technologies", logo: "SSC", keywords: ["ss&c", "alps"] },
+  { issuer: "abrdn", logo: "ABR", keywords: ["abrdn", "aberdeen"] },
+  { issuer: "Amplify ETFs", logo: "AMP", keywords: ["amplify"] },
+  { issuer: "TIAA", logo: "TIA", keywords: ["tiaa", "nuveen"] },
+  { issuer: "ARK 21Shares", logo: "ARK", keywords: ["ark invest", "ark 21shares", "ark investment"] },
+  { issuer: "Grayscale Investments", logo: "GS", keywords: ["grayscale"] },
+  { issuer: "Simplify", logo: "SMP", keywords: ["simplify"] },
+  { issuer: "GraniteShares", logo: "GNT", keywords: ["graniteshares", "granite shares"] },
   { issuer: "Bitwise Asset Management", logo: "BIT", keywords: ["bitwise"] },
   { issuer: "21Shares", logo: "21", keywords: ["21shares", "21 shares"] },
-  { issuer: "VanEck", logo: "VE", keywords: ["vaneck", "van eck"] },
-  { issuer: "Grayscale Investments", logo: "GS", keywords: ["grayscale"] },
-  { issuer: "Franklin Templeton", logo: "FT", keywords: ["franklin templeton", "franklin"] },
   { issuer: "Canary Capital", logo: "CC", keywords: ["canary capital", "canary"] },
-  { issuer: "Invesco Galaxy", logo: "INV", keywords: ["invesco", "galaxy"] },
-  { issuer: "ARK 21Shares", logo: "ARK", keywords: ["ark invest", "ark 21shares", "ark investment"] },
-  { issuer: "WisdomTree", logo: "WT", keywords: ["wisdomtree", "wisdom tree"] },
   { issuer: "Hashdex", logo: "HD", keywords: ["hashdex"] },
   { issuer: "Valkyrie", logo: "VK", keywords: ["valkyrie"] },
-  { issuer: "Global X", logo: "GX", keywords: ["global x"] },
-  { issuer: "REX Shares / Osprey", logo: "RX", keywords: ["rex shares", "osprey"] },
-  { issuer: "ProShares", logo: "PS", keywords: ["proshares", "pro shares"] },
-  { issuer: "Amplify ETFs", logo: "AMP", keywords: ["amplify"] },
-  { issuer: "First Trust", logo: "FT", keywords: ["first trust"] },
+  { issuer: "REX Shares / Osprey", logo: "RX", keywords: ["rex shares", "osprey", "tuttle"] },
 ];
 
 export class SecEdgarSyncEngine {
@@ -300,7 +324,7 @@ export class SecEdgarSyncEngine {
   }
 
   /**
-   * Start scheduled background crawler running every X hours
+   * Start scheduled background crawler running every X seconds (e.g. 30s) or hours
    */
   public startScheduledCron(intervalHours: number = 2) {
     this.syncState.syncIntervalHours = intervalHours;
@@ -308,17 +332,35 @@ export class SecEdgarSyncEngine {
       clearInterval(this.timerHandle);
     }
 
-    const intervalMs = Math.max(1, intervalHours) * 60 * 60 * 1000;
-    this.addLog("SYNC_START", `Scheduled continuous SEC EDGAR background sync every ${intervalHours} hour(s).`, "Cron Scheduled");
+    const intervalMs = Math.max(0.008, intervalHours) * 60 * 60 * 1000;
+    this.addLog("SYNC_START", `Scheduled continuous SEC EDGAR background sync every ${intervalHours >= 1 ? `${intervalHours} hour(s)` : `${Math.round(intervalHours * 3600)} seconds`}.`, "Cron Scheduled");
 
     this.timerHandle = setInterval(() => {
-      this.runFullSync("Scheduled Cron Trigger");
+      this.runFullSync("Scheduled Automated SEC EDGAR Sync");
     }, intervalMs);
 
     // Run initial sync shortly after boot
     setTimeout(() => {
       this.runFullSync("Initial Server Boot Scan");
-    }, 3000);
+    }, 2000);
+  }
+
+  public startScheduledIntervalSeconds(intervalSeconds: number = 30) {
+    this.syncState.syncIntervalHours = intervalSeconds / 3600;
+    if (this.timerHandle) {
+      clearInterval(this.timerHandle);
+    }
+
+    const intervalMs = intervalSeconds * 1000;
+    this.addLog("SYNC_START", `Scheduled high-frequency SEC EDGAR background sync every ${intervalSeconds}s across all 36 US ETF issuers.`, "30s Polling Active");
+
+    this.timerHandle = setInterval(() => {
+      this.runFullSync(`Automated ${intervalSeconds}s Issuer Check`);
+    }, intervalMs);
+
+    setTimeout(() => {
+      this.runFullSync("Initial 30s Scan");
+    }, 1500);
   }
 
   /**
