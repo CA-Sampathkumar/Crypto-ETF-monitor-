@@ -593,6 +593,7 @@ export default function App() {
         {activeTab === "derivatives" && (
           <BtcDerivativesOpenInterestView
             applications={applications}
+            livePrices={livePrices}
             onSelectEtfByTicker={handleSelectEtfByTicker}
           />
         )}

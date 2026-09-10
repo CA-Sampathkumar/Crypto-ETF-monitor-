@@ -68,15 +68,18 @@ import {
   fetchLiveDonotMissRadar,
   LiveTokenDerivativesSnapshot,
 } from "../services/derivativesService";
+import { LiveTokenPrice } from "../services/marketApi";
 import { ETFApplication } from "../types";
 
 interface BtcDerivativesOpenInterestViewProps {
   applications?: ETFApplication[];
+  livePrices?: Record<string, LiveTokenPrice>;
   onSelectEtfByTicker?: (ticker: string) => void;
 }
 
 export const BtcDerivativesOpenInterestView: React.FC<BtcDerivativesOpenInterestViewProps> = ({
   applications = [],
+  livePrices = {},
   onSelectEtfByTicker,
 }) => {
   // Selected Token State (Default: BTC, switchable to any token)
@@ -124,18 +127,32 @@ export const BtcDerivativesOpenInterestView: React.FC<BtcDerivativesOpenInterest
     };
   }, [selectedTokenSymbol]);
 
-  // Find live token spot price from active ETF dashboard if available
+  // Find live token spot price from livePrices feed, active ETF dashboard, or snapshot
+  const livePriceEntry = livePrices[selectedTokenSymbol];
   const matchingEtf = useMemo(() => {
     return safeApplications.find((a) => a.tokenSymbol === selectedTokenSymbol || (a.ticker && a.ticker.includes(currentTokenMeta.etfTickerPrimary)));
   }, [safeApplications, selectedTokenSymbol, currentTokenMeta]);
 
-  const liveTokenPrice = liveSnapshot?.tokenPrice || matchingEtf?.currentPriceUsd || currentTokenMeta.defaultPrice;
-  const liveTokenChange = liveSnapshot?.price24hChange !== undefined ? liveSnapshot.price24hChange : (matchingEtf?.price24hChange || 2.4);
+  const liveTokenPrice = livePriceEntry?.priceUsd || liveSnapshot?.tokenPrice || matchingEtf?.currentPriceUsd || currentTokenMeta.defaultPrice;
+  const liveTokenChange = livePriceEntry?.change24h !== undefined ? livePriceEntry.change24h : (liveSnapshot?.price24hChange !== undefined ? liveSnapshot.price24hChange : (matchingEtf?.price24hChange || 2.4));
 
   // Generate historical points for the selected token
   const historicalData = useMemo(() => {
     return generateTokenDerivativesHistoricalData(selectedTokenSymbol, timeframe, liveTokenPrice, liveTokenChange);
   }, [selectedTokenSymbol, timeframe, liveTokenPrice, liveTokenChange]);
+
+  // Build map of live prices for all radar tokens
+  const radarLivePriceMap = useMemo(() => {
+    const map: Record<string, { price: number; change24h: number }> = {};
+    if (livePrices && Object.keys(livePrices).length > 0) {
+      (Object.entries(livePrices) as [string, LiveTokenPrice][]).forEach(([sym, val]) => {
+        if (val && val.priceUsd > 0) {
+          map[sym] = { price: val.priceUsd, change24h: val.change24h };
+        }
+      });
+    }
+    return map;
+  }, [livePrices]);
 
   // Load Single Token Snapshot & All-Tokens Radar Data
   const loadData = useCallback(async (isManual: boolean = false) => {
@@ -143,26 +160,39 @@ export const BtcDerivativesOpenInterestView: React.FC<BtcDerivativesOpenInterest
     try {
       const [snapshot, radar] = await Promise.all([
         fetchLiveTokenDerivativesData(selectedTokenSymbol, liveTokenPrice, liveTokenChange),
-        fetchLiveDonotMissRadar(),
+        fetchLiveDonotMissRadar(radarLivePriceMap),
       ]);
       if (snapshot) {
         setLiveSnapshot(snapshot);
       }
       if (Array.isArray(radar) && radar.length > 0) {
-        setRadarItems(radar);
+        // Overlay real-time prices from livePriceMap if available
+        const syncedRadar = radar.map((item) => {
+          const live = radarLivePriceMap[item.symbol] || (livePrices[item.symbol] ? { price: livePrices[item.symbol].priceUsd, change24h: livePrices[item.symbol].change24h } : null);
+          if (live && live.price > 0) {
+            return {
+              ...item,
+              spotPrice: live.price,
+              price24hChange: live.change24h,
+              totalOpenInterestTokens: Math.round(item.totalOpenInterestUsd / live.price),
+            };
+          }
+          return item;
+        });
+        setRadarItems(syncedRadar);
       } else {
-        setRadarItems(generateDonotMissRadarList());
+        setRadarItems(generateDonotMissRadarList(radarLivePriceMap));
       }
       setLastRefreshedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
     } catch (err) {
       console.error("Error loading derivatives radar data:", err);
-      setRadarItems((prev) => (Array.isArray(prev) && prev.length > 0 ? prev : generateDonotMissRadarList()));
+      setRadarItems((prev) => (Array.isArray(prev) && prev.length > 0 ? prev : generateDonotMissRadarList(radarLivePriceMap)));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
       setAutoRefreshCountdown(30);
     }
-  }, [selectedTokenSymbol, liveTokenPrice, liveTokenChange]);
+  }, [selectedTokenSymbol, liveTokenPrice, liveTokenChange, radarLivePriceMap, livePrices]);
 
   // Initial load and symbol change reload
   useEffect(() => {
@@ -205,7 +235,20 @@ export const BtcDerivativesOpenInterestView: React.FC<BtcDerivativesOpenInterest
 
   // Filtered Radar Items for "Don't Miss" Table
   const filteredRadarItems = useMemo(() => {
-    const list = Array.isArray(radarItems) && radarItems.length > 0 ? radarItems : generateDonotMissRadarList();
+    const rawList = Array.isArray(radarItems) && radarItems.length > 0 ? radarItems : generateDonotMissRadarList(radarLivePriceMap);
+    const list = rawList.map((item) => {
+      const live = radarLivePriceMap[item.symbol] || (livePrices[item.symbol] ? { price: livePrices[item.symbol].priceUsd, change24h: livePrices[item.symbol].change24h } : null);
+      if (live && live.price > 0) {
+        return {
+          ...item,
+          spotPrice: live.price,
+          price24hChange: live.change24h,
+          totalOpenInterestTokens: Math.round(item.totalOpenInterestUsd / live.price),
+        };
+      }
+      return item;
+    });
+
     return list.filter((item) => {
       if (!item) return false;
       const matchesSearch =
@@ -221,7 +264,7 @@ export const BtcDerivativesOpenInterestView: React.FC<BtcDerivativesOpenInterest
       if (categoryFilter === "PIPELINE") return item.category && item.category.includes("Pipeline");
       return true;
     });
-  }, [radarItems, tokenSearchQuery, categoryFilter]);
+  }, [radarItems, tokenSearchQuery, categoryFilter, radarLivePriceMap, livePrices]);
 
   // Format Helper Utilities
   const formatCurrency = (val: number) => {

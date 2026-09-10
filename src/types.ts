@@ -118,11 +118,29 @@ export interface ETFApplication {
 export interface OnlineEtfTrackerSource {
   id: string;
   name: string;
-  category: "SEC EDGAR" | "Market Price Feed" | "Exchange Registry" | "Bloomberg / ETF.com";
+  category: "SEC EDGAR" | "Market Price Feed" | "Exchange Registry" | "Bloomberg / ETF.com" | "Blockworks Research" | "Coinglass Tracker" | "Analytics & Flow Engine" | string;
   status: "connected" | "syncing" | "paused" | "error";
   lastCheckTime: string;
   itemsDiscovered: number;
   endpointUrl: string;
+  searchUrlTemplate?: string;
+  description?: string;
+  badge?: string;
+}
+
+export interface EtfSearchEngine {
+  id: string;
+  name: string;
+  provider: "Blockworks" | "Coinglass" | "SEC EDGAR" | "Bloomberg" | "ETF.com" | "CoinGecko" | "CME Group";
+  category: "Institutional Intelligence" | "Derivatives & Flows" | "Regulatory Filing Engine" | "Market Price Feed" | "Exchange Registry";
+  baseUrl: string;
+  searchUrlTemplate: string;
+  description: string;
+  status: "active" | "live" | "syncing";
+  discoveryFeatures: string[];
+  sampleQueries: string[];
+  lastSync: string;
+  totalEntitiesTracked: number;
 }
 
 export interface OnlineSyncLog {

@@ -134,11 +134,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={onOpenOnlineTrackerModal}
                 id="btn-online-trackers"
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 text-xs font-semibold border border-emerald-500/30 transition-all shadow-sm shadow-emerald-500/10 cursor-pointer whitespace-nowrap"
+                title="Search Engines & Discovery Hub: Blockworks, Coinglass, SEC EDGAR EFTS"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-950/60 via-cyan-950/40 to-neutral-900 hover:from-emerald-900/80 hover:to-neutral-800 text-emerald-300 text-xs font-semibold border border-emerald-500/40 transition-all shadow-sm shadow-emerald-500/10 cursor-pointer whitespace-nowrap"
               >
                 <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                <span className="hidden md:inline">Online Multi-Feeds</span>
-                <span className="md:hidden">Feeds</span>
+                <span className="hidden md:inline">ETF Search Engines &amp; Discovery</span>
+                <span className="md:hidden">Engines &amp; Feeds</span>
               </button>
             )}
 
